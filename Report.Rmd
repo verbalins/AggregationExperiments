@@ -1,0 +1,269 @@
+---
+title: "Aggregation technique evaluation"
+author: "Simon Lidberg"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(knitr)
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE, fig.align='center', dpi = 200, cache=TRUE)
+knit_hooks$set(pngquant = hook_pngquant)
+source("R/VisualizeData.R")
+```
+
+```{r data, include=FALSE}
+df <- get_data_from_db(db = "data/AggregationExp_CorrectLT.db")
+grouped <- group_data(df)
+delta <- delta_values(grouped)
+
+df_85 <- get_data_from_db(db = "data/NewSimulationResults_85.db")
+grouped_85 <- group_data(df_85)
+delta_85 <- delta_values(grouped_85)
+```
+
+# Introduction
+[//]: # (, pngquant = "--speed=5")
+The experiment has been setup to evaluate the limits of the aggregation technique. This is accomplished by running `r length(df)` experiments with 4 input parameters and 8 outputs for comparison.
+
+Three different models are used. *Detailed* is a model generated from a number of buffer-machine pairs, determined by the parameter **NumberMachines** and the buffersize is set by the parameter **BufferSize**. After simulation of this model, the outputs are used to construct two aggregated models, *Aggregated* and *AggregatedPlace*.
+
+The inputs needed to *Aggregated* and *AggregatedPlace* are Availability $\alpha$, Mean down time (MDT), minimum Lead time (MinLT), average WIP (AvgWIP) and maximum WIP (MaxWIP). MinLT is calculated by $CT*NumberMachines+BufferSize*10$, where 10 is the transport time for each buffer place, in seconds. $\alpha$ is calculated by analyzing the interdeparture times from the last station in the *Detailed* model. Each time the departure time is above CT, we increment a counter and use this as a measure of when the line has not delivered according to plan.
+
+*Aggregated* is the regular aggregation technique from Pehrsson (2015), and *AggregatedPlace* switches to a PlaceBuffer object as the LineWIP.
+
+**InputDistribution** controls the failure calculation for the LineInput object. Either LineInput uses no failures, the same Availability as the LineOutput, or it uses the square root of the value. This increases the availability on the input compared to just using Avb. Each station and buffer in the *Detailed* model uses the same attributes.
+
+```{r complete_data, echo=FALSE}
+knitr::kable(data.frame("Detailed_98" = c(60, 98, 600), "Detailed_85" = c(60, 85, 600), row.names = c("CT", "Avb", "MDT")), caption = "Parameters for each station in the *Detailed* model", label = "attr")
+```
+
+
+# Runtime {.tabset}
+
+Shows the runtime in seconds for the different models compared to the size of the model. Each **BufferSize** setting, 1-10, is shown by a connected line with a fitted function to show the growth.
+
+## 98
+
+```{r Runtime_graph, echo=FALSE}
+grouped %>% 
+  filter(as.numeric(InputDistribution)==1) %>% 
+  ggplot(aes(NumberMachines, Runtime, group = interaction(ExpName, BufferSize), color = ExpName)) +
+              geom_line(alpha=0.4) +
+              geom_smooth(aes(group=ExpName), se = FALSE) +
+              scale_y_continuous(breaks = seq(0, 200, by = 50), limits = c(0, 200)) +
+              labs(title = "Runtime versus model size", 
+                   subtitle = "Grouped by BufferSize and with InputDistribution set to No Failures") +
+              ylab("Runtime in seconds") +
+              xlab("Number of buffer/machine pairs in sequence") +
+              guides(color=guide_legend(title="Model type")) + 
+              theme_bw() +
+              theme(legend.position = "bottom")
+```
+
+## 85
+
+```{r Runtime_graph_85, echo=FALSE}
+grouped_85 %>% 
+  filter(as.numeric(InputDistribution)==1) %>% 
+  ggplot(aes(NumberMachines, Runtime, group = interaction(ExpName, BufferSize), color = ExpName)) +
+              geom_line(alpha=0.4) +
+              geom_smooth(aes(group=ExpName), se = FALSE) +
+              scale_y_continuous(breaks = seq(0, 200, by = 50), limits = c(0, 200)) +
+              labs(title = "Runtime versus model size", 
+                   subtitle = "Grouped by BufferSize and with InputDistribution set to No Failures") +
+              ylab("Runtime in seconds") +
+              xlab("Number of buffer/machine pairs in sequence") +
+              guides(color=guide_legend(title="Model type")) + 
+              theme_bw() +
+              theme(legend.position = "bottom")
+```
+
+*Detailed* exhibits exponential growth, while *AggregatedPlace* shows linear growth, and *Aggregated* is near constant.
+
+# Plotting the difference {.tabset}
+Comparing the difference when setting the failure of **LineInput** to No Failure, Avb, or to sqrt(Avb/100). Compared to the performance of *Detailed* indicated by a horizontal line where $y=1$.
+
+## LT {.tabset}
+
+### Average {.tabset}
+
+#### Avb 98
+
+```{r LT_Avg, echo=FALSE}
+plot_diff("LT_avg", delta)
+```
+
+#### Avb 85
+
+```{r LT_Avg_85, echo=FALSE}
+plot_diff("LT_avg", delta_85)
+```
+
+### Min {.tabset}
+
+#### Avb 98
+
+```{r LT_Min, echo=FALSE}
+plot_diff("LT_min", delta)
+```
+
+#### Avb 85
+
+```{r LT_Min_85, echo=FALSE}
+plot_diff("LT_min", delta_85)
+```
+
+### Max {.tabset}
+
+#### Avb 98
+
+```{r LT_Max, echo=FALSE}
+plot_diff("LT_max", delta)
+```
+
+#### Avb 85
+
+```{r LT_Max_85, echo=FALSE}
+plot_diff("LT_max", delta_85)
+```
+
+## WIP {.tabset}
+
+### Average {.tabset}
+
+#### Avb 98
+
+```{r WIP_Avg, echo=FALSE}
+plot_diff("WIP_avg", delta)
+```
+
+#### Avb 85
+
+```{r WIP_Avg_85, echo=FALSE}
+plot_diff("WIP_avg", delta_85)
+```
+
+### Min {.tabset}
+
+#### Avb 98
+
+```{r WIP_Min, echo=FALSE}
+plot_diff("WIP_min", delta)
+```
+
+#### Avb 85
+
+```{r WIP_Min_85, echo=FALSE}
+plot_diff("WIP_min", delta_85)
+```
+
+### Max {.tabset}
+
+#### Avb 98
+
+```{r WIP_Max, echo=FALSE}
+plot_diff("WIP_max", delta)
+```
+
+#### Avb 85
+
+```{r WIP_Max_85, echo=FALSE}
+plot_diff("WIP_max", delta_85)
+```
+
+## JPH {.tabset}
+
+### Average {.tabset}
+
+#### Avb 98
+
+```{r JPH_Avg, echo=FALSE}
+plot_diff("JPH_avg", delta)
+```
+
+#### Avb 85
+
+```{r JPH_Avg_85, echo=FALSE}
+plot_diff("JPH_avg", delta_85)
+```
+
+### Min {.tabset}
+
+#### Avb 98
+
+```{r JPH_Min, echo=FALSE}
+plot_diff("JPH_min", delta)
+```
+
+#### Avb 85
+
+```{r JPH_Min_85, echo=FALSE}
+plot_diff("JPH_min", delta_85)
+```
+
+### Max {.tabset}
+
+#### Avb 98
+
+```{r JPH_Max, echo=FALSE}
+plot_diff("JPH_max", delta)
+```
+
+#### Avb 85
+
+```{r JPH_Max_85, echo=FALSE}
+plot_diff("JPH_max", delta_85)
+```
+
+# Difference compared to buffer size {.tabset}
+Performance of *Detailed* indicated by a horizontal line where $y=1$.
+
+## LT {.tabset}
+
+### Avb 98
+
+```{r BufferDiff_LT, echo=FALSE}
+compare_buffersize("LT_avg", delta)
+```
+
+### Avb 85
+
+```{r BufferDiff_LT_85, echo=FALSE}
+compare_buffersize("LT_avg", delta_85, interactive=TRUE)
+```
+
+## WIP {.tabset}
+
+### Avb 98
+
+```{r BufferDiff_WIP, echo=FALSE}
+compare_buffersize("WIP_avg", delta)
+```
+
+### Avb 85
+
+```{r BufferDiff_WIP_85, echo=FALSE}
+compare_buffersize("WIP_avg", delta_85)
+```
+
+## JPH {.tabset}
+
+### Avb 98
+
+```{r BufferDiff_JPH, echo=FALSE}
+compare_buffersize("JPH_avg", delta)
+```
+
+### Avb 85
+
+```{r BufferDiff_JPH_85, echo=FALSE}
+compare_buffersize("JPH_avg", delta_85)
+```
+
+# Summary
+*Aggregated* operates at near constant **Runtime** and does not scale with the size of the input parameters. *AggregatedPlace* increases with the size of the input parameters due to the functionality of PlaceBuffer.
+
+*AggregatedPlace* does not increase the performance sufficiently to offset the increase in **Runtime**.
+
+**InputDistribution** performs worse or equal for all KPI's.
