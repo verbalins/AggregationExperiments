@@ -131,5 +131,5 @@ get_fraction <- function(df, col) {
 
 ## call required packages
 require(pacman)
-p_load(tidyverse, RSQLite, DBI, plotly, magrittr, broom, GGally, lattice, Hmisc,
-       latex2exp, RColorBrewer, FSA, psych, emmeans)
+p_load(tidyverse, DBI, RSQLite, plotly, magrittr, broom, GGally, lattice, Hmisc,
+       latex2exp, RColorBrewer, FSA, emmeans) #psych
