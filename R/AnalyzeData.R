@@ -1,5 +1,5 @@
 # Data is in a SQLite 3 db called AggregationExp.db
-get_data_from_db <- function(FUN = get_all_data, db = "data/AggregationExp.db") {
+get_data_from_db <- function(FUN = get_all_data, db = "data/NewSimulationResults_98_Errors.db") {
   con <- dbConnect(RSQLite::SQLite(), db)
 
   results_db <- tbl(con, "Result")
@@ -22,56 +22,35 @@ summarised_5limit <- function(sqlconn) {
   df <- sqlconn %>%
     group_by(NumberMachines, BufferSize, InputDistribution, Experiment, ExpName) %>%
     #filter(BufferSize == 5, ExpName != "AggregatedPlace") %>%
-    summarise(LT_avg = mean(LT_avg),
-              LT_min = mean(LT_min),
-              LT_max = mean(LT_max),
-              WIP_avg = mean(WIP_avg),
-              WIP_min = mean(WIP_min),
-              WIP_max = mean(WIP_max),
-              JPH_avg = mean(JPH_avg),
-              Runtime = mean(Runtime),
+    summarise(across(LT_avg:Runtime, mean),
               n = n()) %>%
     collect()
 }
 
 group_data <- function(df) {
   df <- df %>% group_by(NumberMachines, BufferSize, InputDistribution, Experiment, ExpName) %>%
-    summarise(LT_avg = mean(LT_avg),
-              LT_min = mean(LT_min),
-              LT_max = mean(LT_max),
-              WIP_avg = mean(WIP_avg),
-              WIP_min = mean(WIP_min),
-              WIP_max = mean(WIP_max),
-              JPH_avg = mean(JPH_avg),
-              JPH_min = mean(JPH_min),
-              JPH_max = mean(JPH_max),
-              Runtime = mean(Runtime)) %>%
+    mutate(Observation = n()) %>%
+    summarise(across(LT_avg:Runtime, mean),
+              n = n()) %>%
     arrange(Experiment)
 }
 
 calc_baseline <- function(df) {
   df <- df %>% group_by(Experiment, ExpName) %>%
-    mutate(LT_avg = mean(LT_avg),
-           LT_min = mean(LT_min),
-           LT_max = mean(LT_max),
-           WIP_avg = mean(WIP_avg),
-           WIP_min = mean(WIP_min),
-           WIP_max = mean(WIP_max),
-           JPH_avg = mean(JPH_avg),
-           Runtime = mean(Runtime))
+    mutate(across(LT_avg:Runtime, mean))
 }
 
 get_missing_experiments <- function(sqlconn) {
   sqlconn %>%
-    count(Experiment, ExpName) %>%
+    count(Experiment, ExpName, Observation) %>%
     collect()
 }
 
-check_missing <- function() {
-  get_data_from_db(get_missing_experiments) %>%
-    count(Experiment) %>%
-    filter(n < 3) %>%
-    nrow() == 0
+check_missing <- function(db = "data/NewSimulationResults_98_Errors.db") {
+  get_data_from_db(get_missing_experiments, db) %>%
+    count(Experiment) #%>%
+    #filter(n < 3) %>%
+    #nrow() == 0
 }
 
 run_script <- function() {

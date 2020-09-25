@@ -90,12 +90,12 @@ plotly_splom <- function(df) {
     )
 }
 
-plot_diff <- function(attr, df, inputDist = 0) {
+plot_diff <- function(attr, df, inputDist = 0, interactive = FALSE) {
   if (!(inputDist == 0)) {
     df <- df %>% filter(as.numeric(InputDistribution == inputDist))
   }
 
-  df %>%
+  gfx <- df %>%
     filter(!ExpName == "Detailed") %>%
     ggplot(aes(NumberMachines, y = !!as.name(attr), color = ExpName, group = interaction(Experiment, ExpName))) +
     geom_point(alpha = 0.5, size = 0.2) +
@@ -109,6 +109,13 @@ plot_diff <- function(attr, df, inputDist = 0) {
          color = "Experiment") +
     theme_bw() +
     theme(legend.position = "bottom")
+
+  if (!interactive) {
+    print(gfx)
+  }
+  else{
+    ggplotly(gfx)
+  }
 }
 
 compare_buffersize <- function(attr, df, interactive=FALSE) {

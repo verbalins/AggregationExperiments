@@ -13,7 +13,7 @@ source("R/VisualizeData.R")
 ```
 
 ```{r data, include=FALSE}
-df <- get_data_from_db(db = "data/AggregationExp_CorrectLT.db")
+df <- get_data_from_db(db = "data/NewSimulationResults_98_Errors.db")
 grouped <- group_data(df)
 delta <- delta_values(grouped)
 
@@ -230,7 +230,7 @@ compare_buffersize("LT_avg", delta)
 ### Avb 85
 
 ```{r BufferDiff_LT_85, echo=FALSE}
-compare_buffersize("LT_avg", delta_85, interactive=TRUE)
+compare_buffersize("LT_avg", delta_85)
 ```
 
 ## WIP {.tabset}
@@ -264,6 +264,12 @@ compare_buffersize("JPH_avg", delta_85)
 # Summary
 *Aggregated* operates at near constant **Runtime** and does not scale with the size of the input parameters. *AggregatedPlace* increases with the size of the input parameters due to the functionality of PlaceBuffer.
 
-*AggregatedPlace* does not increase the performance sufficiently to offset the increase in **Runtime**.
+*AggregatedPlace* does not increase the performance sufficiently to offset the increase in **Runtime**. 
+
+*AggregatedPlace* should therefore **NOT** be used.
 
 **InputDistribution** performs worse or equal for all KPI's.
+
+# Next Steps
+* How to evaluate the difference in values? No failure > sqrt(Avb) > Avb.
+* Test parallel systems.
