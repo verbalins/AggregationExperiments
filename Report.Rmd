@@ -42,6 +42,7 @@ knitr::kable(data.frame("Detailed_98" = c(60, 98, 600), "Detailed_85" = c(60, 85
 # Runtime {.tabset}
 
 Shows the runtime in seconds for the different models compared to the size of the model. Each **BufferSize** setting, 1-10, is shown by a connected line with a fitted function to show the growth.
+*Detailed* exhibits exponential growth, while *AggregatedPlace* shows linear growth, and *Aggregated* is near constant.
 
 ## 98
 
@@ -78,8 +79,6 @@ grouped_85 %>%
               theme_bw() +
               theme(legend.position = "bottom")
 ```
-
-*Detailed* exhibits exponential growth, while *AggregatedPlace* shows linear growth, and *Aggregated* is near constant.
 
 # Plotting the difference {.tabset}
 Comparing the difference when setting the failure of **LineInput** to No Failure, Avb, or to sqrt(Avb/100). Compared to the performance of *Detailed* indicated by a horizontal line where $y=1$.
