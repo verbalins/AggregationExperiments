@@ -1,14 +1,28 @@
 ---
-title: "Aggregation technique evaluation"
+title: "Evaluation of generic model simplification method"
 author: "Simon Lidberg"
 date: "`r Sys.Date()`"
-output: html_document
+site: "bookdown::bookdown_site"
+abstract: |
+  An experiment where the limits of the simplification method is evaluated. We compare the output of a dynamically created model with the output of a simplified representation. We use 4 input parameters and analyze 8 output parameters. We can observe a correlation between outputs for medium to large lines, but for smaller lines (<50 stations), there is a larger discrepancy.
+output:
+  bookdown::pdf_document2: 
+    extra_dependencies: ["float"]
+  #html_document: default
+  bookdown::word_document2:
+    toc: true
+documentclass: article
+bibliography: LiteratureReview.bib
+link-citations: yes
+params:
+  show_min_max: FALSE
 ---
 
 ```{r setup, include=FALSE}
 library(knitr)
-knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE, fig.align='center', dpi = 200, cache=TRUE)
-knit_hooks$set(pngquant = hook_pngquant)
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE, fig.align='center', dpi = 200, cache=TRUE, dev = "ragg_png", fig.pos="!H", out.extra="")
+#knit_hooks$set(pngquant = hook_pngquant)
+#knit_hooks$set(optipng = hook_optipng)
 source("R/VisualizeData.R")
 ```
 
@@ -24,28 +38,42 @@ delta_85 <- delta_values(grouped_85)
 
 # Introduction
 [//]: # (, pngquant = "--speed=5")
-The experiment has been setup to evaluate the limits of the aggregation technique. This is accomplished by running `r length(df)` experiments with 4 input parameters and 8 outputs for comparison.
+The experiment has been created to evaluate and validate the limits of the model simplification technique. This is accomplished by running `r length(df)` experiments with 4 input parameters and 8 outputs for comparison.
 
-Three different models are used. *Detailed* is a model generated from a number of buffer-machine pairs, determined by the parameter **NumberMachines** and the buffersize is set by the parameter **BufferSize**. After simulation of this model, the outputs are used to construct two aggregated models, *Aggregated* and *AggregatedPlace*.
-
-The inputs needed to *Aggregated* and *AggregatedPlace* are Availability $\alpha$, Mean down time (MDT), minimum Lead time (MinLT), average WIP (AvgWIP) and maximum WIP (MaxWIP). MinLT is calculated by $CT*NumberMachines+BufferSize*10$, where 10 is the transport time for each buffer place, in seconds. $\alpha$ is calculated by analyzing the interdeparture times from the last station in the *Detailed* model. Each time the departure time is above CT, we increment a counter and use this as a measure of when the line has not delivered according to plan.
-
-*Aggregated* is the regular aggregation technique from Pehrsson (2015), and *AggregatedPlace* switches to a PlaceBuffer object as the LineWIP.
+Three different models are used. *Detailed* is a model generated from a number of buffer/machine pairs, determined by the parameter **NumberMachines** and the size of the buffer is set by the parameter **BufferSize**. After simulation of this model, the outputs are used to construct two simplified models, *Aggregated* and *AggregatedPlace*, where *Aggregated* is the regular aggregation technique from [@Pehrsson2015;@Lidberg2019a], and *AggregatedPlace* switches to a PlaceBuffer object as the LineWIP.
 
 **InputDistribution** controls the failure calculation for the LineInput object. Either LineInput uses no failures, the same Availability as the LineOutput, or it uses the square root of the value. This increases the availability on the input compared to just using Avb. Each station and buffer in the *Detailed* model uses the same attributes.
 
-```{r complete_data, echo=FALSE}
-knitr::kable(data.frame("Detailed_98" = c(60, 98, 600), "Detailed_85" = c(60, 85, 600), row.names = c("CT", "Avb", "MDT")), caption = "Parameters for each station in the *Detailed* model", label = "attr")
+## Model algorithm
+*Detailed* is automatically built in Plant Simulation after new inputs have been assigned. The result is a series of buffer/workstation pairs, where each machine uses the same processing time, availability value and mean down time value specified in \@ref(tab:completeData). The buffers are initialized with **BufferSize** and with a processing time of **BufferSize** * CT. This model represents a level of granularity where each workstation and buffer is modelled, the level at which most simulation models are built for a production line. Each buffer/workstation pair is connected to form a single continuous flow.
+
+```{r completeData, echo=FALSE}
+knitr::kable(data.frame("Avb98" = c(60, 98, 600), "Avb85" = c(60, 85, 600), row.names = c("CT", "Avb", "MDT")), caption = "Parameters for each station in the \\textit{Detailed} model", booktabs=T)
 ```
 
+This approach only evaluates complexity in number of entities and components, i.e. increasing the number of events generated. For real models, several other forms of complexity will increase the running time further such as the quantity of connections and the quantity of calculations needed to determine part routing or evaluating parameters and logic [@VanderZee2017].
 
-# Runtime {.tabset}
+The *Detailed* model is run first, and the outputs are used to generate inputs to *Aggregated* and *AggregatedPlace* as described in Section \@ref(introduction). The inputs needed to *Aggregated* and *AggregatedPlace* are Cycle Time (CT), Availability (Avb), Mean down time (MDT), minimum Lead time (MinLT), average WIP (AvgWIP) and maximum WIP (MaxWIP). MinLT is calculated by $CT*NumberMachines+BufferSize*10$, where 10 is the transport time for each buffer place, in seconds. $\alpha$ is calculated by analyzing the interdeparture times from the last station in the *Detailed* model. Each time the departure time is above CT, we increment a counter and use this as a measure of when the line has not delivered according to plan.
 
-Shows the runtime in seconds for the different models compared to the size of the model. Each **BufferSize** setting, 1-10, is shown by a connected line with a fitted function to show the growth.
+Each *Detailed* and *Aggregated* run is done on the same replication. An improvement to this approach would be to run all 10 replications for *Detailed*, parameterize *Aggregated* and run that for 10 replications.
 
-## 98
+## Experiment setup
+The experiment parameters are shown Table \@ref(tab:experimentParameters), where the value for minimum, maximum, and step size are shown. This results in `r 496*10*3` experiments, where each experiment is run for 10 replications. A case can be made for increasing the step size of **NumberMachines** from 1 to 5 or 10 without loss of detail in the result. The same can also be argued for decreasing the maximum of **NumberMachines** since 500 would be considered a very large production line. 500 was chosen to be illustrative of the effect of component complexity on runtime of the model.
 
-```{r Runtime_graph, echo=FALSE}
+```{r experimentParameters, echo=FALSE}
+knitr::kable(data.frame("Min" = c(5, 1, 1), "Max" = c(500, 10, 3), "Step" = c(1, 1, 1), row.names = c("NumberMachines", "BufferSize", "InputDistribution")), caption = "Experiment settings listing minimum value, maximum value, and the step size", booktabs=T)
+```
+
+## Distributed experiment functionality
+Due to the time needed to execute the entire experiment the processing is distributed to enable the model to run on a number of separate machines. Two components are used, a server to manage experiments and receive results and several clients where the experiments are performed. The setup uses the integrated functionality of Plant Simulation to distribute work to several machines. After each experiment is performed, output data is JSON formatted and sent to the server via TCP. The server receives the data and stores it in a SQLite database for post-processing.
+
+# Runtime Evaluation {.tabset}
+
+Shows the runtime in seconds for the different models compared to the size of the model. Each **BufferSize** setting, 1-10, is shown by a connected line with a fitted function in bold to show the trend.
+
+## Availability 98
+
+```{r runtimeGraph, echo=FALSE}
 grouped %>% 
   filter(as.numeric(InputDistribution)==1) %>% 
   ggplot(aes(NumberMachines, Runtime, group = interaction(ExpName, BufferSize), color = ExpName)) +
@@ -61,9 +89,9 @@ grouped %>%
               theme(legend.position = "bottom")
 ```
 
-## 85
+## Availability 85
 
-```{r Runtime_graph_85, echo=FALSE}
+```{r runtimeGraph85, echo=FALSE}
 grouped_85 %>% 
   filter(as.numeric(InputDistribution)==1) %>% 
   ggplot(aes(NumberMachines, Runtime, group = interaction(ExpName, BufferSize), color = ExpName)) +
@@ -79,9 +107,9 @@ grouped_85 %>%
               theme(legend.position = "bottom")
 ```
 
-*Detailed* exhibits exponential growth, while *AggregatedPlace* shows linear growth, and *Aggregated* is near constant.
+*Detailed* exhibits exponential growth, while *AggregatedPlace* shows linear growth, and *Aggregated* is near constant. When using 85 percent availability the runtime is, on average, decreased for both *Detailed* and *AggregatedPlace*. When a failure occurs in a workstation that station is occupied for a longer period of time than when processing. This also affects upstream processing when the previous  buffer is operating near capacity.
 
-# Plotting the difference {.tabset}
+# Parameter Evaluation {.tabset}
 Comparing the difference when setting the failure of **LineInput** to No Failure, Avb, or to sqrt(Avb/100). Compared to the performance of *Detailed* indicated by a horizontal line where $y=1$.
 
 ## LT {.tabset}
@@ -100,6 +128,7 @@ plot_diff("LT_avg", delta)
 plot_diff("LT_avg", delta_85)
 ```
 
+`r if(!params$show_min_max) {"<!--"}`
 ### Min {.tabset}
 
 #### Avb 98
@@ -127,6 +156,7 @@ plot_diff("LT_max", delta)
 ```{r LT_Max_85, echo=FALSE}
 plot_diff("LT_max", delta_85)
 ```
+`r if(!params$show_min_max) {"-->"}`
 
 ## WIP {.tabset}
 
@@ -143,7 +173,7 @@ plot_diff("WIP_avg", delta)
 ```{r WIP_Avg_85, echo=FALSE}
 plot_diff("WIP_avg", delta_85)
 ```
-
+`r if(!params$show_min_max) {"<!--"}`
 ### Min {.tabset}
 
 #### Avb 98
@@ -171,7 +201,7 @@ plot_diff("WIP_max", delta)
 ```{r WIP_Max_85, echo=FALSE}
 plot_diff("WIP_max", delta_85)
 ```
-
+`r if(!params$show_min_max) {"-->"}`
 ## JPH {.tabset}
 
 ### Average {.tabset}
@@ -187,7 +217,7 @@ plot_diff("JPH_avg", delta)
 ```{r JPH_Avg_85, echo=FALSE}
 plot_diff("JPH_avg", delta_85)
 ```
-
+`r if(!params$show_min_max) {"<!--"}`
 ### Min {.tabset}
 
 #### Avb 98
@@ -215,9 +245,10 @@ plot_diff("JPH_max", delta)
 ```{r JPH_Max_85, echo=FALSE}
 plot_diff("JPH_max", delta_85)
 ```
+`r if(!params$show_min_max) {"-->"}`
 
 # Difference compared to buffer size {.tabset}
-Performance of *Detailed* indicated by a horizontal line where $y=1$.
+Performance of *Detailed* indicated by a horizontal line where $y=1$. Here **BufferSize** is augmented with the inclusion of **BufferSize** = 0, meaning a removal of the buffer between subsequent workstations.
 
 ## LT {.tabset}
 
@@ -264,12 +295,19 @@ compare_buffersize("JPH_avg", delta_85)
 # Summary
 *Aggregated* operates at near constant **Runtime** and does not scale with the size of the input parameters. *AggregatedPlace* increases with the size of the input parameters due to the functionality of PlaceBuffer.
 
-*AggregatedPlace* does not increase the performance sufficiently to offset the increase in **Runtime**. 
+*AggregatedPlace* does not increase the performance sufficiently to offset the increase in **Runtime**. *AggregatedPlace* should therefore **NOT** be used.
 
-*AggregatedPlace* should therefore **NOT** be used.
+*Aggregated* is a good representation of the outputs of *Detailed* for lines with more than 50 machines. The accuracy for smaller lines is low for all parameters.
 
 **InputDistribution** performs worse or equal for all KPI's.
 
 # Next Steps
 * How to evaluate the difference in values? No failure > sqrt(Avb) > Avb.
 * Test parallel systems.
+* Re-evaluate 
+  + Larger step size for **NumberMachines**
+  + Remove *AggregatedPlace*
+  + Change the generation of data by running 10 replications on *Detailed* and then run *Aggregated* for 10 replications
+  + **InputDistribution** is only of interest when running the *Aggregated* model in isolation. When connected to other processes, the input will probably already be stochastic.
+
+# References
