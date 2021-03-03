@@ -6,7 +6,7 @@ library(RefManageR)
 library(revtools)
 library(stringr)
 
-bibliography <- read_bibliography("../LiteratureReview.bib")
+bibliography <- read_bibliography("../output/LiteratureReview.bib")
 
 # Fields to be used for input
 # Added additional_notes as a way to enter additional information
@@ -109,6 +109,8 @@ server <- function(input, output, session) {
     observeEvent(input$back_btn, {
         if (extraction_data$current_text > 1) {
             extraction_data$current_text <- extraction_data$current_text - 1
+        } else if (extraction_data$current_text == 1) {
+            extraction_data$current_text <- nrow(extraction_data$data)
         }
     })
 
@@ -116,6 +118,8 @@ server <- function(input, output, session) {
     observeEvent(input$next_btn, {
         if (extraction_data$current_text < nrow(extraction_data$data)) {
             extraction_data$current_text <- extraction_data$current_text + 1
+        } else if (extraction_data$current_text == nrow(extraction_data$data)) {
+            extraction_data$current_text <- 1
         }
     })
 
@@ -154,7 +158,7 @@ server <- function(input, output, session) {
     # Download the resulting data as csv
     output$download_btn <- downloadHandler(
         filename = function() {
-            paste("data-", Sys.Date(), ".csv", sep="")
+            paste("ExtractedData-", Sys.Date(), ".csv", sep="")
         },
         content = function(file) {
             write.csv(extraction_data$data, file, row.names = FALSE)

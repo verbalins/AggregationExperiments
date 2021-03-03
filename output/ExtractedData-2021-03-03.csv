@@ -1,0 +1,309 @@
+"label","simplificationtype","simsoftware","studytype","systemtype","apparea","complexity","motivation","complexitymeasure","validationmeasure","efficacymeasure","additional_notes"
+"Duarte2007115","Aggregation","Extend (Version 4.0)","Case","Supply Chain","Semiconductor Manufacturing","28 machines for the second experiment
+1 variant","Faster and  simpler model to enable what-if for supply-chains","Operators
+Machines
+Batch sizes","CT (Leadtime) Mean, SD
+THP Mean, SD","Runtime","Multiple experiments"
+"Guo2020","Meta-model","Arena","Case","Emergency Department","Healthcare","Optimization","Reduce running time
+Optimization","Running time
+Optimization search space","Length of stay, Min
+Proportions of each patient category
+Time differences waiting time","Running time","Multi-fidelity
+Low: ANN meta-model
+High: Arena
+Single objective optimization"
+"Salama20181147","Meta-model","Arena","Case","Assembly","Manufacturing 
+(White Goods)","8 stations
+Large DOE","Runtime
+Black-box
+","DOE","R2 score","Runtime","Meta-model, analytical"
+"Johnson20052172","Omission","","Experiment","Wafer Fabrication","Semiconductor Manufacturing","10-100 Machines
+10 Buffers","Runtime","Number Machines","Correlation of CT, mean, CI
+","Runtime","Minimizing bias and variance
+Fixed product mix"
+"Huber20112872","Multiresolution","d3FACT insight","Experiment
+Academic models","","","Model A 151 components, long, parallel
+Model B 133 components, short, parallel
+Model C 61 components, parallel","Runtime","Number of components","Relative Error % of  Throughput
+Relative Error % of  Throughput and Allocation (WIP)","","Not stated which type of system, only ""original models"" are mentioned"
+"Thomas2011767","Aggregation
+Meta-model","Arena","Case","Sawmill","Production","3 lines, 20 steps","Runtime","","","","Only training and validation of NN was performed, no validation to the detailed  model"
+"Mohammadi2020","Aggregation","AnyLogic","Experiment","Job shop","Manufacturing","6 machines","Runtime","Number of components","CT (Leadtime)","Runtime",""
+"Ewen2017293","Substitution","AutoSched AP","Experiment","Supply chain","Semiconductor manufacturing","70 tool groups and 240 process steps","Runtime","Process steps","CT (Leadtime) min, max, median, mean, variability and correlation","Runtime",""
+"McGraw2000326","Meta","","","","","","","","","","Not relevant
+EXCLUDE E05"
+"Etman20111790","Aggregation","Analytical","Experiment","Workstation (Wafer Fabrication)","Semiconductor Manufacturing","","","","Cycle time - throughput curves","","No simulation software stated
+No mention of performance
+Not explicitly stated complexity measure
+Aggregated from arrival and departure times using EPT"
+"Jansen2012","Aggregation","","Experiment","MRI","Healthcare","12 steps","Reduce complexity","","Effective process time, mean, squared coefficient of variation
+Flow time - throughput curves","","Aggregation to a G/G/1 model"
+"Khan2019149","Aggregation","","Case","","Manufacturing","13 workstations, 95 operations","Reduce effort required for model development,  data analysis, validation, and simulation","","","","Aggregation through product combination
+Aggregation through process time distribution
+Aggregation applied to conceptual model!"
+"Laipple20193603","Aggregation","","Case","Supply Chain","Semiconductor Manufacturing","","Complexity limits applicability","","","","Lacks implementation and results
+No information on simulation software
+No validation"
+"Pehrsson20163632","Aggregation","FACTS Analyzer, Siemens Plant Simulation","Case
+Optimization","Production","Manufacturing","A Number of production lines
+Hundreds of machines","Runtime, enable optimization
+Less time to collect data
+Simpler","Number of machines","Finish time
+Lead time
+Throughput, mean
+WIP
+Lead time, mean","","No mention of efficacy, no comparisons between models"
+"Henriksen1989648","","","","","","","","","","","Not relevant, tutorial
+EXCLUDE E02"
+"Popovics2016257","","","","","","","","","","","Calculating simulation model complexity in Plant Simulation
+Not handling simplification
+EXCLUDE E05"
+"Li2018304","Meta-model","Plant Simulation (eM-Plant)","Case","Machining, engine cylinder block","Manufacturing","12 components, parallel","Reduce runtime","","MAPE, RMSE, R2","Runtime",""
+"Frantz199714","","","","","","","","","","","No full-text
+EXCLUDE E04"
+"Ward1989141","","","","","","","","","","","No full-text
+EXCLUDE E04"
+"Snchez20062","","","","","","","","","","","Not relevant
+No simplfication methods applied
+EXCLUDE E05"
+"Sevinc1990125","","","","","","","","","","","No full-text
+EXCLUDE E04"
+"Thomas2014530","Meta-model","","Case","Sawmill","Production","Same as Thomas2011","Complexity reduction by use of meta-model","Same as Thomas2011","RMSE between tree model and ANN","","TOC, remove by omission and keep bottleneck. Model the rest with a meta-model, regressiontree. Same model as Thomas2011"
+"Bergmann2010545","","","","","","","","","","","Relevance? 
+Not specifically referring to simplification techniques of existing models, rather generating them based on MES data.
+EXCLUDE E05"
+"Brooks19961","","","","","","","","","","","Not relevant
+Literature review, not examples
+EXCLUDE E05"
+"Parnianifard202089","","","","","","","","","","","Not relevant
+Not discrete event, but important for meta-models
+EXCLUDE E05"
+"Ycesan199894","","","","","","","","","","","Not relevant
+Discussion of complexity, not specific simplifications
+EXCLUDE E05"
+"Ahmed2016213","","","","","","","","","","","Not relevant
+Interview study on what simulation modellers mean  by size  and complexity
+EXCLUDE E02"
+"Robinson2006792","","","","","","","","","","","Not relevant
+Conceptual modeling, not on coded
+EXCLUDE E05"
+"vanderZee2010473","","","","","","","","","","","No full-text
+EXCLUDE E04"
+"Robinson2008278","","","","","","","","","","","Conceptual modeling, not on coded
+EXCLUDE E05"
+"Robinson2008291","","","","","","","","","","","Conceptual modeling, not on coded
+EXCLUDE E05"
+"Kotiadis2008951","","","","","","","","","","","Conceptual modeling, not on coded
+EXCLUDE E05"
+"Wallace1987597","","","","","","","","","","","Complexity discussion, not simplifications
+EXCLUDE E05"
+"Huber2009839","Aggregation
+Omission","d3FACT insight","Experiment
+Academic models","","","Model A, B and C. Model A is a big model with
+151 components, containing medium long lines and many parallel lines and five assembly machines. Model B has 133 components, including six assembly machines, quite short lines and some parallel lines. Model C has 61 components and contains only three lines and two parallel lines.","Complexity Reduction, Runtime","Number of components and links in the model, custom metric","WIP, CT, Throughput","Runtime
+Complexity
+Bottlenecks identified in detailed and simplified",""
+"Lipponen2018B305","","","","","","","","","","","No full-text
+EXCLUDE E04"
+"Jain1999888","Aggregation, replace non-bottlenecks with delays","Custom","Experiment","Supply chain","Semiconductor Manufacturing","","Compare detailed and aggregated models","Number of components","Service level
+Inventory, mean and sd
+Cycle time (Leadtime), mean and sd","","Not recommended to use aggregated due to the difference in results
+Only mentions of runtime reductions with parallel evaluations"
+"X.ISI.000495451900012","","","","","","","","","","","No full-text
+EXCLUDE E04"
+"Kleijnen20183","","","","","","","","","","","No full-text
+EXCLUDE E04"
+"Hood1990103","Toggling different settings on and off, rework, operators, machine failures","","Experiment","","Semiconductor manufacturing",""," Input data and cost for creating the model","","","","Only two references, which are self references, fails quality
+EXCLUDE E05"
+"Webster1984215","","","","","","","","","","","No full-text
+EXCLUDE E04"
+"Jain20011129","","Arena","Case","Supply chain","Logistics","","","","","","Not simplified model of already existing line
+EXCLUDE E05"
+"Chwif2006930","","","","","","","","","","","Simplifying conceptual model
+EXCLUDE E05"
+"Fowler2015661","","","","","","","","","","","Tutorial on model development, not relevant
+EXCLUDE E02"
+"Bergmann201738","","","","","","","","","","","Automatic model generation, not relevant
+EXCLUDE E05"
+"Shen2018943","Meta-model","","","","","","","","","","Not for discrete-event simulation, otherwise interesting
+EXCLUDE E05"
+"Law1993916","","","","","","","","","","","Panel discussion
+EXCLUDE E02"
+"Fowler2004469","","","","","","","","","","","Literature review and research gap analysis, not relevant but interesting
+EXCLUDE E02"
+"Huang2016283","","","","","","","","","","","Automatic model generation, not relevant
+EXCLUDE E05"
+"Fripp198519","","","","","","","","","","","No full-text
+EXCLUDE E04"
+"Rose20071708","Aggregation","","","Wafer fabrication","Semiconductor Manufacturing","","Runtime","","Cycle time distribution prediction","","Only self references?
+Would need to be analyzed with Rose2007"
+"X.ISI.000534786300010","Meta-model","","","","Healthcare","","Runtime and Optimization","","","","Tutorial or introduction to meta-models, no cases and not specifically DES
+EXCLUDE E02"
+"Shannon19987","","","","","","","","","","","Not specifically simplification of existing models, tutorial
+EXCLUDE E05"
+"Pidd1999118","","","","","","","","","","","Not specifically simplification of existing models, tutorial
+EXCLUDE E05"
+"Jimenez2008600","Aggregation","AutoSched AP for fab
+AutoMod for AMHS","Case","Wafer fabrication and automated material handling systems","Semiconductor Manufacturing","316 operations on 60 workstations, some parallel","Too long time to build, experiment, and analyze a complex model
+Runtime","","Cycle Time - Throughput Curve, mean  95% CI","Runtime",""
+"NA.103","Meta-model","","Case","Logistics","Logistics","","","","R2 and Mean Absolute Error","Runtime",""
+"Alizadeh2020275","","","","","","","","","","","Good review of meta-modeling, but not specifically relevant
+EXCLUDE E05"
+"Brooks199988","","","","","","","","","","","No full-text
+EXCLUDE E04"
+"Yavari2012125","","SIGMA","","","","","","","","","Not specifically DES model simplification
+EXCLUDE E05"
+"Maier2017","","","","","","","","","","","Not specifically DES model simplification
+Good terminology and categorization
+EXCLUDE E05"
+"Zhou2016885","Meta-model
+Selective clustering ensemble algorithm","Plant Simulation","Case","Wafer fabrication","Semiconductor Manufacturing","24 workstations and 72 machines","Runtime","Number of workstations, number of machines, number of operations, total number of operations","on-time delivery, 
+cycle time (leadtime), mean
+throughput","Runtime",""
+"Chwif1998120","Aggregation, Omission, Substitution","Taylor II","Experiment","Customer Service","Academic","","Runtime
+Understanding","","Bottleneck utilization","Runtime",""
+"Rexstad19851","","","","","","","","","","","No full-text
+EXCLUDE E04"
+"Chiang20102005","Substitution","Custom","Case","Wafer Fabrication","Semiconductor Manufacturing","30-52 operations
+27 types of machines
+113 machines in total","Runtime
+Identify components to remove while keeping accuracy","Number of components","Ranking of dispatching rules
+OTD rate
+tardiness, mean, max","Runtime","Optimization problem to optimize the simplified model in regards to low runtime and high validity"
+"vanderZee20191056","","","","","","","","","","","Review paper
+EXCLUDE E05"
+"Park2017547","Aggregation","Custom","","Wafer Fabrication","Semiconductor Manufacturing","","Runtime","","Cycle time (leadtime), average, sd, abs(error), sd error
+lot residency time, average, sd, abs(error), sd error
+throughput, average, sd, abs(error), sd error","Runtime","Clustered Photolithography tool in particular, expensive and usually a bottleneck is simplified in this study"
+"Borovska2020400","","","","","","","","","","","Not relevant
+EXCLUDE E05"
+"Gu2019","","","","","","","","","","","No full-text
+EXCLUDE E04"
+"Greinacher2020165","Meta-model Kriging","Plant Simulation","Case","Metalworking","Manufacturing","","Runtime
+Optimization","","Throughput Time
+Energy consumption
+Cost per part
+Delivery Reliability","","No explicit measurements of efficacy, only descriptions saying the meta-model is faster."
+"erveansk20201","Meta-model","Witness Horizon","","Job Shop","Manufacturing"," 8 workstations, parallel machines","","","","","Design of Experiments used to create the meta-model
+Deterministic simulation model, relevance?
+EXCLUDE E05"
+"Morrison201181","Aggregation","MATLAB","Case","Wafer Fabrication","Semiconductor Manufacturing","","Runtime","","Cycle Time (Leadtime), error rate
+Throughput, error rate","Runtime Ratio","Not really relevant, more focus on numerical
+EXCLUDE E05"
+"Thomas2011646","Meta-model","Arena","Case","Saw Mill","Production","35 objects","Complexity Reduction
+Runtime
+Automated","","Throughput time, mean, sd","","Use aggregation and substitution to replace non-important machines with a ANN"
+"Chwif2000449","","","","","","","","","","","Preventing complexity, rather than reducing
+EXCLUDE E05"
+"Morris1967B707","","","","","","","","","","","Tutorial to modeling. Interesting, but not relevant
+EXCLUDE E02"
+"Jacobson1999476","","","","","","","","","","","Simuation modeling theory and reasons for complexity
+EXCLUDE E05"
+"Courtois1985590","","","","","","","","","","","Simplification theory, not specifically DES
+EXCLUDE E05"
+"Lidberg2020888","Aggregation","Plant Simulation","Case","Factory","Manufacturing","Validation: 40 machines, some parallel
+Case: 13 production lines aggregated","Optimization","Number of production lines","JPH, mean, median, min, max
+LT, mean, median, min, max
+WIP, mean, median, min, max","","Optimization was a motivation, to enable the optimization of a complete factory with several production lines"
+"VanDerZee20193987","","","","","","","","","","","Panel about simulation education in simple  models
+EXCLUDE E02"
+"X.ISI.000505082200027","","","","","","","","","","","EXCLUDE E05"
+"Veeger2011223","Aggregation","","Case","","Semiconductor Manufacturing","Case 1 workstation = 14 machines","Complex models are difficult to develop and maintain","","CT (Leadtime), mean, CI","","Not necessary with an existing model
+Aggregation of workstations, not machines
+Similar articles from the same authors? "
+"Prajapat20202893","Meta-model","WITNESS","Case","Assembly","Manufacturing","24 main assembly tasks","","","","","Design of Experiments  to generate input data to meta-model
+Optimization
+Not exactly relevant since they are using the meta-model as a base to understand the results and not as a way to simplify the des model"
+"Vlker2003867","Aggregation and replacing the excluded machines with a delay","Arena","Empirical","Production-planning and scheduling","Manufacturing","19 production systems with 50 resources each","Simplification to enable optimization","Number of machines","Mapping error (Start  and Completion dates of production orders)","Computational cost (s)","Optimization
+"
+"Thomas20161319","","","","","","","","","","","Similar to other work by same authors...
+MAYBE"
+"Bosmans2019","","","","","","","","","","","Traffic simulation Hybrid of ABS and DES
+EXCLUDE E05"
+"Rank20162896","","AutoMod","Case","Automated material handling system","Semiconductor Manufacturing","106 manufacturing steps","","","","Runtime
+Model build time","Creating a base model which can be easily configurable to represent different solutions
+Relevance?
+EXCLUDE E05"
+"Thomas2005111","Aggregation","Arena","Case","Assembly","Manufacturing","17 work centers","Fast decisions","Model Reduction Ratio","Utilization rate Bottleneck
+Global lead time
+Load bottleneck
+Variability of results","Model reduction ratio
+Time save ratio","Compare with the other publication by the same author"
+"Nance1999254","","","","","","","","","","","Not relevant
+EXCLUDE E05"
+"Karder20192037","Meta-model","SimGen","Case","Machining","Manufacturing","32 machines","Runtime to enable optimization","","R2
+Mean Absolute Error
+Mean Relative Error","","Use meta-model to find good candidates and simulate the most promising ones
+No comparison of runtime (Efficacy measures)"
+"Vasudevan20112268","Aggregation","Simul8","Case","Assembly","Manufacturing Automotiva","","","","","","Aggregation, top-down modeling, choosing the correct abstraction when building the model. Not simplifying an existing. Relevance?
+Each line was modeled as a conveyor with a single workstation at the end. The capacity of the conveyor was one less than the line. Downtimes accumulated  at the workstation."
+"Moris20081913","","","","","Manufacturing","","","","","","Modeling methods more than simplifying existing
+EXCLUDE E05"
+"Brooks20001009","Aggregation, Omission","WITNESS","Case","Production (manufacturing and assembly of door hinges for cars)
+Factory, two production lines and an assembly line","Manufacturing","100 machines (Case 1)
+ 31 machines (Case 2) Three production lines","Runtime
+Understanding","Number of machines
+Number of connections","","Runtime","Case 1: Simplify model by using a batch as the main entity in the line (2500 real parts). Since very few parts are rejected, the male and female batches will match. Only different cycle times for male and female in one machine, can aggregate variants into product families. No stochasticity!
+Case 2: Stochasticity, couldn't simplify as much due to the experimental frame requiring some detail to answer the question stated."
+"Kim2003290","Aggregation and Omission (Replacing non-bottlenecks with delays)","FACTOR/AIM","Experiments","Wafer fabrication","Semiconductor Manufacturing","82 workstations, single or multiple machines, 21 different product types","Runtime Enabling real-time scheduling","","","Runtime","Evaluation of dispatching rules"
+"Piplani2004618","Aggregation
+Condensation (Omission)","","Experiment","Wafer Fabrication","Semiconductor Manufacturing","454 workstations","Details are not needed for production planning
+Runtime","Number of components
+Number of connections","Product cycle time (Leadtime), t-test
+Workstation utilization, t-test","","Bottom up, simplification of an existing detailed model
+Semiconductor manufacturing has a large variety of products with  long leadtimes"
+"Yin1989782","","","","","","","","","","","No full-text
+EXCLUDE E04"
+"Barlow2020432","","","","","","","","","","","Not relevant, theory paper, ethical ramifications
+EXCLUDE E05"
+"Negahban2014241","","","","","","","","","","","Literature review, not specific simplifications
+Use in introduction!
+EXCLUDE E05"
+"Innis19837","","","","","","","","","","","No full-text
+EXCLUDE E04"
+"Law199116","","","","","","","","","","","No full-text
+EXCLUDE E04"
+"Benjamin1998391","","","","","","","","","","","Selecting abstraction level and integrating different models
+Not relevant,
+EXCLUDE E05"
+"Robinson199434","","","","","","","","","","","No full-text
+EXCLUDE E04"
+"Salt19931","","","","","","","","","","","Case for simple models, not relevant
+EXCLUDE E05"
+"Kabak2012","Aggregation","Plant Simulation","","Single semiconductor toolsets","Semiconductor Manufacturing","","","","","",""
+"Mehdad2018322","","Acsim","","","Traffic simulation","","","","","","Agent based modeling for traffic simulation, not relevant
+EXCLUDE E05"
+"Cheng20201187","","","","","","","","","","","Meta-models for analytical problems, not DES
+EXCLUDE E05"
+"Henriksen20083","","","","","","","","","","","Arguments for simple models and reducing complexity
+Not relevant
+EXCLUDE E05"
+"Frantz19951413","","","","","","","","","","","Theory of simplification, not specific cases
+Not relevant
+EXCLUDE E05"
+"Rank2016133","","","Case","Wafer Fabrication","semiconductor manufacturing","","","","","","Discussion of simulation approaches and lessons learned from literature and own experience, not relevant
+EXCLUDE E05"
+"Fishwick198818","","","","","","","","","","","Simplification theory, not relevant
+EXCLUDE E05"
+"Sevinc19911115","","","","","","","","","","","Simplification theory, not relevant
+EXCLUDE E05"
+"Zeigler1976","","","","","","","","","","","No full-text
+EXCLUDE E04"
+"Farooqui2018857","","","","","","","","","","","Not discrete event simulation
+EXCLUDE E05"
+"Stogniy20192372","Substitution","AutoSched AP","Experiment","Wafer Fabrication","Semiconductor Manufacturing","MIMAC dataset 5
+590 unique operations","Runtime","Number of operations","Lot cycle time distribution (Leadtime)
+Kolmogorov-Smirnov test as a nonparametric test
+Summarized absolute divergence","Runtime",""
+"Kelleher2018595","","","","","","","","","","","Not DES, not relevant
+EXCLUDE E05"
+"Virtue20111154","","Simul8","","Emergency Department (Accident and Emergency)","Healthcare","","","","","","Relevance, healthcare and not applicable to manufacturing
+EXCLUDE E05"
+"Rose20001481","Aggregation","ARENA","Experiment","Wafer Fabrication","Semiconductor Manufacturing","228 workstations, 104 processing steps, 9 products","","","Correlation","","Uses correlation measures, coefficient of correlation and autocorrelation
+Simplificaton theory"
+"Robinson2004","","","","","","","","","","","No full-text
+EXCLUDE E04"
+"Yuan2014","","AnyLogic","","","","","","","","","Simulation library, relevance?
+EXCLUDE E05"
+"Zeigler2000","","","","","","","","","","","No full-text
+EXCLUDE E04"
