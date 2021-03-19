@@ -9,8 +9,6 @@ output:
   bookdown::pdf_document2: 
     extra_dependencies: ["float"]
   #html_document: default
-  bookdown::word_document2:
-    toc: true
 documentclass: article
 bibliography: LiteratureReview.bib
 link-citations: yes
@@ -27,7 +25,7 @@ source("R/VisualizeData.R")
 ```
 
 ```{r data, include=FALSE}
-df <- get_data_from_db(db = "data/NewSimulationResults_98_Errors.db")
+df <- get_data_from_db(db = "data/NewSimulationResults_98.db")
 grouped <- group_data(df)
 delta <- delta_values(grouped)
 

@@ -12,7 +12,7 @@ get_data_from_db <- function(FUN = get_all_data, db = "data/NewSimulationResults
 }
 
 get_all_data <- function(sqlconn) {
-  df <- sqlconn %>% collect() %>%
+  df <- sqlconn %>% dplyr::collect() %>%
     mutate(Runtime = ifelse(Runtime < 0, Runtime+86400, Runtime),
            ExpName = factor(ExpName, levels = c("Detailed", "Aggregated", "AggregatedPlace")),
            InputDistribution = factor(ceil(Experiment/1100), labels = c("No Failure", "Avb", "sqrt(Avb)")))
@@ -24,7 +24,7 @@ summarised_5limit <- function(sqlconn) {
     #filter(BufferSize == 5, ExpName != "AggregatedPlace") %>%
     summarise(across(LT_avg:Runtime, mean),
               n = n()) %>%
-    collect()
+    dplyr::collect()
 }
 
 group_data <- function(df) {
@@ -43,7 +43,7 @@ calc_baseline <- function(df) {
 get_missing_experiments <- function(sqlconn) {
   sqlconn %>%
     count(Experiment, ExpName, Observation) %>%
-    collect()
+    dplyr::collect()
 }
 
 check_missing <- function(db = "data/NewSimulationResults_98_Errors.db") {
@@ -104,11 +104,30 @@ delta_values <- function(grouped) {
   return(grouped)
 }
 
-get_fraction <- function(df, col) {
-  df %>% mutate(col = lapply())
+workspace <- function() {
+  x <- grouped_85 %>% filter(ExpName == "Detailed", InputDistribution == "No Failure") %>% .$JPH_avg
+  y <- grouped_85 %>% filter(ExpName == "Aggregated", InputDistribution == "No Failure") %>% .$JPH_avg
+  fv <- data.frame(x,y) %>% lm(y ~ x,.) %>% fitted.values()
+
+  data.frame(x, y,
+             BufferSize = rep(rep(0:10, each = 1), 100),
+             NumberMachines = unique(test$NumberMachines),
+             Experiment = unique(test$Experiment)) %>%
+  plot_ly(
+    x = ~x,
+    y = ~y,
+    color = ~BufferSize,
+    customdata = ~Experiment,
+    mode = "markers",
+    type = "scatter",
+    hovertemplate = paste('Detailed: %{x:.2f}',
+                          '<br>Aggregated: %{y:.2f}',
+                          '<br>BufferSize: %{BufferSize}',
+                          '<br>Experiment: %{customdata}')) %>%
+  add_lines(x = ~x, y = ~fv$residuals)
 }
 
 ## call required packages
 require(pacman)
 p_load(tidyverse, DBI, RSQLite, plotly, magrittr, broom, GGally, lattice, Hmisc,
-       latex2exp, RColorBrewer, FSA, emmeans) #psych
+       latex2exp, RColorBrewer, FSA, emmeans)
