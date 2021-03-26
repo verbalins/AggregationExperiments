@@ -75,14 +75,14 @@ fulltext <- selected_abs %>% dplyr::filter(screened_abstracts == "selected")
 export_to_bib(fulltext, "fulltext")
 
 # Save intermediary
-#save(wos, scopus, ieee, vanderzee, sources, unique_references, deduplicated_sources, titles_screened, selected_abs, fulltext, file="output/LiteratureReview_BeforeFulltext.RData", compress = "xz")
+save(wos, scopus, ieee, vanderzee, sources, unique_references, deduplicated_sources, titles_screened, selected_abs, fulltext, file="output/LiteratureReview_BeforeFulltext.RData", compress = "xz")
 
 # Extract data with shiny::runApp('browser'), creates browser/saved_progress.RData as intermediary.
-# Mark excluded articles with EXCLUDE in "additional_notes" field
+# Mark excluded articles with EXCLUDE and reason in "additional_notes" field
 
 # Load data extracted from full-text reads
 #extracted_data <- readRDS("browser/saved_progress.RData") # For intermediate
-extracted_data <- readr::read_csv("output/ExtractedData-2021-03-19.csv") # For final
+extracted_data <- readr::read_csv("output/ExtractedData-2021-03-21.csv") # For final
 
 # Remove excluded articles
 full_text_excluded <- extracted_data[grep("EXCLUDE", extracted_data$additional_notes),]
@@ -106,12 +106,18 @@ manual <- read_bibliography("data/manual.bib") %>%
 wsc2020 <- manual %>% filter(grepl("2020 Winter", booktitle)) %>% nrow()
 snowball <- nrow(manual) - wsc2020
 
-# Combine database and manual search
-included <- full_join(final_fulltext, manual)
+# Combine database and manual search, add span value to determine age of publication
+included <- full_join(final_fulltext, manual) %>%
+  mutate(span = cut(as.numeric(year), breaks=c(0,2017,2020), labels=c(2017,2020)))
+
+stopifnot({ # Test for correct assignment of span
+  all(included %>% filter(year < 2017) %>% .$span == 2017);
+  all(included %>% filter(year > 2017) %>% .$span == 2020)
+})
 
 # Data to answer RQ1
 publication_type <- included %>%
-  group_by(type, cut(as.numeric(year), breaks=c(0,2017,2020), labels=c(2017,2020))) %>%
+  group_by(type, span) %>%
   summarise(n = n())
 
 # Delimited by " and " between authors and ", " between first and last name
@@ -131,7 +137,7 @@ mostpublished_all <- data.frame(lastname = allauthors[,1], firstname = substring
 venues <- included %>%
   mutate(journal = if_else(grepl("Winter Simulation", journal), "Winter Simulation Conference", journal)) %>%
   group_by(journal,
-           cut(as.numeric(year), breaks=c(0,2017,2020), labels=c(2017,2020))) %>%
+           span) %>%
   summarise(n = n()) %>%
   arrange(desc(n), journal)
 
@@ -140,8 +146,11 @@ venues <- included %>%
 # RQ2
 included %>% select(label, simsoftware, apparea) %>% filter(grepl("plant", tolower(simsoftware)))
 
+# RQ2.4
+included %>% select(label, apparea, complexity, motivation) %>% arrange(apparea) %>% View()
+ggplot(data=data.frame(x=sizemetric), aes(x)) + geom_histogram() %>% plotly::ggplotly()
 # Save intermediary
-#save(wos, scopus, ieee, vanderzee, sources, unique_references, deduplicated_sources, titles_screened, selected_abs, fulltext, extracted_data, full_text_excluded, extracted_data_included, final_fulltext, manual, included, file="output/LiteratureReview_AfterFulltext.RData", compress = "xz")
+save(wos, scopus, ieee, vanderzee, sources, unique_references, deduplicated_sources, titles_screened, selected_abs, fulltext, extracted_data, full_text_excluded, extracted_data_included, final_fulltext, manual, included, sizemetric, file="output/LiteratureReview_AfterFulltext.RData", compress = "xz")
 
 # Create .data file (key = value, where value is nrow(df))
 prismakeys <- list("scopus" = scopus,
