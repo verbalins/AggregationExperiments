@@ -148,7 +148,17 @@ included %>% select(label, simsoftware, apparea) %>% filter(grepl("plant", tolow
 
 # RQ2.4
 included %>% select(label, apparea, complexity, motivation) %>% arrange(apparea) %>% View()
-ggplot(data=data.frame(x=sizemetric), aes(x)) + geom_histogram() %>% plotly::ggplotly()
+
+#plotly::ggplotly(ggplot(data=data.frame(x=sizemetric), aes(x)) + geom_histogram())
+
+ggplot(data = data.frame(x = sizemetric, lab=names(sizemetric)), aes(x, fill=lab)) +
+  geom_histogram() +
+  scale_x_continuous(breaks = seq(0, 500, 50)) +
+  theme_bw(base_size=18) +
+  theme(legend.position="bottom") +
+  labs(x ="Number of workstations", y="Frequency", fill="Industry") +
+  ggsave("ModelComplexity.png", device=ragg::agg_png())
+
 # Save intermediary
 save(wos, scopus, ieee, vanderzee, sources, unique_references, deduplicated_sources, titles_screened, selected_abs, fulltext, extracted_data, full_text_excluded, extracted_data_included, final_fulltext, manual, included, sizemetric, file="output/LiteratureReview_AfterFulltext.RData", compress = "xz")
 

@@ -144,6 +144,23 @@ compare_buffersize <- function(attr, df, interactive=FALSE) {
   }
 }
 
+compare_singleinputdist_buffersize <- function(attr, df, interactive=FALSE) {
+  df %>% mutate(BufferSize = as.factor(BufferSize)) %>%
+    filter(ExpName == "Aggregated", InputDistribution=="No Failure") %>%
+    ggplot(aes(NumberMachines, y = !!as.name(attr), group = interaction(ExpName, BufferSize))) +
+    geom_point(alpha = 0.5, size = 1)+#, aes(shape = ExpName)) +
+    geom_hline(yintercept = 1) +
+    geom_line(aes(color = BufferSize, group = interaction(ExpName, BufferSize))) +
+    scale_x_continuous(minor_breaks = seq(50, 450, by = 50)) +
+    labs(#title = paste("BufferSize compared to", attr),
+         x = "Number of buffer/machine pairs in sequence",
+         y = "Difference to Detailed in %",
+         color = "BufferSize",
+         shape = "Experiment") +
+    theme_bw(base_size = 18) +
+    theme(legend.position = "bottom")
+}
+
 matrix_plot <- function(attr, data) {
   cols <- regmatches(colnames(data), regexpr(paste0(attr,"_[a-z]*"), colnames(data)))
   input1 <- lapply(cols, plot_diff, df = data, inputDist = 1)

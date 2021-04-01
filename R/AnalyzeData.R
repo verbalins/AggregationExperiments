@@ -92,9 +92,10 @@ delta_values <- function(grouped) {
        JPH_avg = .$JPH_avg/.$JPH_avg[1],
        JPH_min = .$JPH_min/.$JPH_min[1],
        JPH_max = .$JPH_max/.$JPH_max[1],
-       ExpName = data.frame(ExpName = factor(seq(1:3)))) %>%
+       ExpName = data.frame(ExpName = factor(seq(1:3))),
+       Runtime = .$Runtime/.$Runtime[1]) %>%
     unnest(cols = c(LT_avg, LT_min, LT_max, WIP_avg, WIP_min, WIP_max,
-                    JPH_avg, JPH_min, JPH_max, ExpName)) %>%
+                    JPH_avg, JPH_min, JPH_max, ExpName, Runtime)) %>%
     mutate(InputDistribution = as.factor(ceil(Experiment/1100)),
            NumberMachines = grouped$NumberMachines,
            BufferSize = grouped$BufferSize)
