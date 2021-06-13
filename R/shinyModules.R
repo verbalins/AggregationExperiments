@@ -1,3 +1,4 @@
+# Creates UI to document the literature review process
 library(shiny)
 
 # Define UI for data extraction application

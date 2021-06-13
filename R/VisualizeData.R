@@ -171,7 +171,7 @@ plot_compare_error <- function(df, attr, metric = "Error", interactive = FALSE) 
                                             "\u03b1\u2082",
                                             "\u03b1\u2083",
                                             "\u03b1\u2084",
-                                            "\u03b1\u2085"))) %>%
+                                            "\u03b1\u2085"))) %>% # Alpha_n
     ggplot(aes(NumberMachines, y = !!as.name(metric), group = interaction(Setting, BufferSize))) +
     #geom_point(alpha = 0.5, size = 1) + #, aes(shape = ExpName)) +
     geom_hline(yintercept = if_else(metric == "Ratio", 1, 0)) +
@@ -179,9 +179,9 @@ plot_compare_error <- function(df, attr, metric = "Error", interactive = FALSE) 
     scale_x_continuous(minor_breaks = seq(50, 450, by = 50)) +
     scale_y_continuous(labels = scales::percent_format(accuracy = 1)) + # Use percentage
     facet_wrap(vars(Setting), nrow = 5, strip.position = "right", drop = TRUE) +
-    labs(x = "Number of buffer/machine pairs in sequence, \u03b2",
+    labs(x = "Number of buffer/machine pairs in sequence, \u03b2", # Beta
          y = paste(if_else(metric=="RMSES", "Scaled RMSE", metric), unlist(strsplit(attr, "[_]"))[1]),
-         color = "\u03b3",
+         color = "\u03b3", # Gamma
          shape = "Experiment") +
     theme_bw(base_size = 14) +
     theme(legend.position = "bottom")
