@@ -1,4 +1,5 @@
 source("R/AnalyzeData.R")
+library(latex2exp)
 
 # How to compare, we have several different KPIs. Facet on input distribution.
 # Create a visualisation for each metric with min, avg, and max.
@@ -146,18 +147,43 @@ compare_buffersize <- function(attr, df, interactive=FALSE) {
 
 compare_singleinputdist_buffersize <- function(attr, df, interactive=FALSE) {
   df %>% mutate(BufferSize = as.factor(BufferSize)) %>%
-    filter(ExpName == "Aggregated", InputDistribution=="No Failure") %>%
+    filter(ExpName == "Aggregated") %>%
     ggplot(aes(NumberMachines, y = !!as.name(attr), group = interaction(ExpName, BufferSize))) +
     geom_point(alpha = 0.5, size = 1)+#, aes(shape = ExpName)) +
-    geom_hline(yintercept = 1) +
+    geom_hline(yintercept = 0) +
     geom_line(aes(color = BufferSize, group = interaction(ExpName, BufferSize))) +
     scale_x_continuous(minor_breaks = seq(50, 450, by = 50)) +
+    facet_wrap(vars(Setting), nrow = 5, strip.position = "right", drop = TRUE) +
     labs(#title = paste("BufferSize compared to", attr),
          x = "Number of buffer/machine pairs in sequence",
-         y = "Difference to Detailed in %",
+         y = "Error",
          color = "BufferSize",
          shape = "Experiment") +
     theme_bw(base_size = 18) +
+    theme(legend.position = "bottom")
+}
+
+plot_compare_error <- function(df, attr, metric = "Error", interactive = FALSE) {
+  df %>% mutate(BufferSize = as.factor(BufferSize),
+                Setting = factor(Setting,
+                                 levels = c("1","2","3","4","5"),
+                                 labels = c("\u03b1\u2081",
+                                            "\u03b1\u2082",
+                                            "\u03b1\u2083",
+                                            "\u03b1\u2084",
+                                            "\u03b1\u2085"))) %>%
+    ggplot(aes(NumberMachines, y = !!as.name(metric), group = interaction(Setting, BufferSize))) +
+    #geom_point(alpha = 0.5, size = 1) + #, aes(shape = ExpName)) +
+    geom_hline(yintercept = if_else(metric == "Ratio", 1, 0)) +
+    geom_line(aes(color = BufferSize, group = interaction(Setting, BufferSize))) +
+    scale_x_continuous(minor_breaks = seq(50, 450, by = 50)) +
+    scale_y_continuous(labels = scales::percent_format(accuracy = 1)) + # Use percentage
+    facet_wrap(vars(Setting), nrow = 5, strip.position = "right", drop = TRUE) +
+    labs(x = "Number of buffer/machine pairs in sequence, \u03b2",
+         y = paste(if_else(metric=="RMSES", "Scaled RMSE", metric), unlist(strsplit(attr, "[_]"))[1]),
+         color = "\u03b3",
+         shape = "Experiment") +
+    theme_bw(base_size = 14) +
     theme(legend.position = "bottom")
 }
 

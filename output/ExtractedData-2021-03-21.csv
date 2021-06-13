@@ -216,7 +216,7 @@ Aggregation of workstations, not machines
 Similar articles from the same authors? "
 "Prajapat20202893","Meta-model","WITNESS","Case","Assembly","Manufacturing","24 main assembly tasks","","","","","Design of Experiments  to generate input data to meta-model
 Optimization
-Not exactly relevant since they are using the meta-model as a base to understand the results and not as a way to simplify the des model"
+Not exactly relevant since they are using the meta-model as a base to understand the results and not as a way to simplify the des model EXCLUDE E05"
 "Vlker2003867","Aggregation and replacing the excluded machines with a delay","Arena","Empirical","Production-planning and scheduling","Manufacturing","19 production systems with 50 resources each","Simplification to enable optimization","Number of machines","Mapping error (Start  and Completion dates of production orders)","Computational cost (s)","Optimization
 "
 "Thomas20161319","","","","","","","","","","","Similar to other work by same authors...

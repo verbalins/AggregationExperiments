@@ -102,7 +102,8 @@ export_to_bib(final_fulltext, "final_fulltext")
 # Include snowball and manual searches
 manual <- read_bibliography("data/manual.bib") %>%
   mutate(type = "CONFERENCE",
-         journal = booktitle)
+         journal = booktitle,
+         apparea = stringr::str_extract(mendeley_tags, "Manufacturing|Healthcare|Semiconductor"))
 wsc2020 <- manual %>% filter(grepl("2020 Winter", booktitle)) %>% nrow()
 snowball <- nrow(manual) - wsc2020
 
@@ -144,10 +145,10 @@ venues <- included %>%
 #keywords <- included$author_keywords & included$keywords
 
 # RQ2
-included %>% select(label, simsoftware, apparea) %>% filter(grepl("plant", tolower(simsoftware)))
+#included %>% select(label, simsoftware, apparea) %>% filter(grepl("plant", tolower(simsoftware)))
 
 # RQ2.4
-included %>% select(label, apparea, complexity, motivation) %>% arrange(apparea) %>% View()
+#included %>% select(label, apparea, complexity, motivation) %>% arrange(apparea) %>% View()
 
 #plotly::ggplotly(ggplot(data=data.frame(x=sizemetric), aes(x)) + geom_histogram())
 

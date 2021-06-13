@@ -41,3 +41,6 @@ _book/*
 # R Environment Variables
 .Renviron
 .Rproj.user
+
+# Outputs from scripts
+img/*

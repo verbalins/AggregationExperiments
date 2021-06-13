@@ -1,5 +1,5 @@
 # Data is in a SQLite 3 db called AggregationExp.db
-get_data_from_db <- function(FUN = get_all_data, db = "data/NewSimulationResults_98_Errors.db") {
+get_data_from_db <- function(FUN = get_all_data, db) {
   con <- dbConnect(RSQLite::SQLite(), db)
 
   results_db <- tbl(con, "Result")
@@ -8,14 +8,20 @@ get_data_from_db <- function(FUN = get_all_data, db = "data/NewSimulationResults
 
   dbDisconnect(con)
 
-  return(df)
+  return(df %>% select(-InputDistribution))
 }
 
 get_all_data <- function(sqlconn) {
   df <- sqlconn %>% dplyr::collect() %>%
-    mutate(Runtime = ifelse(Runtime < 0, Runtime+86400, Runtime),
-           ExpName = factor(ExpName, levels = c("Detailed", "Aggregated", "AggregatedPlace")),
-           InputDistribution = factor(ceil(Experiment/1100), labels = c("No Failure", "Avb", "sqrt(Avb)")))
+    mutate(Runtime = ifelse(Runtime < 0, Runtime+86400, Runtime))
+}
+
+add_experiment_parameters <- function(df) {
+  data.frame(PT = unlist(map(c(60,60,60,60,600), rep, 11000)),
+             Avb = unlist(map(c(85,98,85,98,98), rep, 11000)),
+             MDT = unlist(map(c(600,600,1800,1800,600), rep, 11000)),
+             Setting = unlist(map(1:5, rep, 11000))) %>%
+    dplyr::bind_cols(df %>% arrange(Experiment, Observation))
 }
 
 summarised_5limit <- function(sqlconn) {
@@ -28,10 +34,9 @@ summarised_5limit <- function(sqlconn) {
 }
 
 group_data <- function(df) {
-  df <- df %>% group_by(NumberMachines, BufferSize, InputDistribution, Experiment, ExpName) %>%
+  df <- df %>% group_by(Experiment, Setting, NumberMachines, BufferSize, ExpName) %>%
     mutate(Observation = n()) %>%
-    summarise(across(LT_avg:Runtime, mean),
-              n = n()) %>%
+    summarise(across(LT_avg:Runtime, mean)) %>%
     arrange(Experiment)
 }
 
@@ -79,7 +84,7 @@ run_script <- function() {
   #df %>% ggplot(aes(Experiment, JPH, color = ExpName)) + geom_line()
 }
 
-delta_values <- function(grouped) {
+delta_values_ratio <- function(grouped) {
   grouped <- grouped %>%
     ungroup() %>%
     group_by(Experiment) %>%
@@ -92,16 +97,38 @@ delta_values <- function(grouped) {
        JPH_avg = .$JPH_avg/.$JPH_avg[1],
        JPH_min = .$JPH_min/.$JPH_min[1],
        JPH_max = .$JPH_max/.$JPH_max[1],
-       ExpName = data.frame(ExpName = factor(seq(1:3))),
+       ExpName = data.frame(ExpName = factor(seq(1:2))),
        Runtime = .$Runtime/.$Runtime[1]) %>%
     unnest(cols = c(LT_avg, LT_min, LT_max, WIP_avg, WIP_min, WIP_max,
                     JPH_avg, JPH_min, JPH_max, ExpName, Runtime)) %>%
-    mutate(InputDistribution = as.factor(ceil(Experiment/1100)),
-           NumberMachines = grouped$NumberMachines,
-           BufferSize = grouped$BufferSize)
+    mutate(NumberMachines = grouped$NumberMachines,
+           BufferSize = grouped$BufferSize,
+           Setting = grouped$Setting)
 
-  levels(grouped$ExpName) <- c("Detailed", "Aggregated", "AggregatedPlace")
-  levels(grouped$InputDistribution) <- c("No Failure", "Avb", "sqrt(Avb)")
+  levels(grouped$ExpName) <- c("Detailed", "Aggregated")
+  return(grouped)
+}
+
+delta_values <- function(grouped) {
+  grouped <- grouped %>%
+    ungroup() %>%
+    group_by(Experiment) %>%
+    do(LT_avg = .$LT_avg[1]-.$LT_avg,
+       LT_min = .$LT_min[1]-.$LT_min,
+       LT_max = .$LT_max[1]-.$LT_max,
+       WIP_avg = .$WIP_avg[1]-.$WIP_avg,
+       WIP_min = .$WIP_min[1]-.$WIP_min,
+       WIP_max = .$WIP_max[1]-.$WIP_max,
+       JPH_avg = .$JPH_avg[1]-.$JPH_avg,
+       JPH_min = .$JPH_min[1]-.$JPH_min,
+       JPH_max = .$JPH_max[1]-.$JPH_max,
+       Runtime = .$Runtime[1]-.$Runtime) %>%
+    unnest(cols = c(LT_avg, LT_min, LT_max, WIP_avg, WIP_min, WIP_max,
+                    JPH_avg, JPH_min, JPH_max, ExpName, Runtime)) %>%
+    mutate(Setting = grouped$Setting)
+
+  levels(grouped$ExpName) <- c("Detailed", "Aggregated")
+  #levels(grouped$InputDistribution) <- c("No Failure", "Avb", "sqrt(Avb)")
   return(grouped)
 }
 
