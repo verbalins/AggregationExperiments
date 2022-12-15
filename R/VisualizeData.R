@@ -187,6 +187,23 @@ plot_compare_error <- function(df, attr, metric = "Error", interactive = FALSE) 
     theme(legend.position = "bottom")
 }
 
+plot_compare_error_ggpubr <- function(df, attr, metric = "Error") {
+  df %>% mutate(BufferSize = as.factor(BufferSize),
+                Setting = factor(Setting,
+                                 levels = c("1","2","3","4","5"),
+                                 labels = c("\u03b1\u2081",
+                                            "\u03b1\u2082",
+                                            "\u03b1\u2083",
+                                            "\u03b1\u2084",
+                                            "\u03b1\u2085"))) %>%
+    ggpubr::ggline(x = "NumberMachines", y = metric, group = "BufferSize", color = "BufferSize",
+                   plot_type = "l", ggtheme = theme_gray()) %>%
+    ggpubr::facet(facet.by = "Setting", nrow = 5, strip.position = "right") +
+    #ggpubr::border(color = "grey", size = 0.5) +
+    ggpubr::yscale("percent")
+
+}
+
 matrix_plot <- function(attr, data) {
   cols <- regmatches(colnames(data), regexpr(paste0(attr,"_[a-z]*"), colnames(data)))
   input1 <- lapply(cols, plot_diff, df = data, inputDist = 1)

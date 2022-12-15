@@ -7,13 +7,13 @@ library(Hmisc)
 # Export plots
 save_plot <- function(x, p) {
   ggsave(
-    filename = paste0("img/", x, ".png"),
+    filename = paste0("img/", x, ".pdf"),
     plot = p,
     # bg = "transparent",
-    device = ragg::agg_png,
-    res = 300,
-    units = "in",
-    limitsize = FALSE,
+    device = grDevices::cairo_pdf,
+    #res = 300,
+    units = "px",
+    #limitsize = FALSE,
     height = 2500,
     width = 2000,
     # background = "transparent"
@@ -34,7 +34,7 @@ df <- dplyr::bind_rows(get_data_from_db(db = "data/Detailed.db") %>%
 
 data_with_errors <- df %>%
   filter(BufferSize > 0) %>%
-  select(Setting:ExpName,-c(ID, StatTHP, TargetMDT, Runtime)) %>%
+  select(Setting:ExpName,-all_of(c("ID", "StatTHP", "TargetMDT", "Runtime"))) %>%
   pivot_longer(cols = LT_avg:JPH_sd, names_to = "Variable") %>%
   pivot_wider(names_from = ExpName, values_from = value) %>%
   group_by(Experiment, Variable) %>%
@@ -76,7 +76,7 @@ grouped <- df %>%
 
 compute_rmse <- function(df, attr) {
   df %>%
-    select(Setting:BufferSize, -c(ID, StatTHP, TargetMDT), {{attr}}, ExpName) %>%
+    select(Setting:BufferSize, -all_of(c("ID", "StatTHP", "TargetMDT")), {{attr}}, ExpName) %>%
     pivot_wider(names_from = ExpName, values_from = {{attr}}) %>%
     nest_by(Setting, Experiment, BufferSize,NumberMachines) %>%
     mutate(MAE = mean(abs(data$Aggregated - data$Detailed)),
@@ -84,7 +84,7 @@ compute_rmse <- function(df, attr) {
            RMSES = RMSE/mean(data$Detailed))
 }
 
-invisible(lapply(df %>% select("LT_avg":"JPH_sd") %>% colnames(),
+invisible(lapply(df %>% select(LT_avg:JPH_sd) %>% colnames(),
                  function(x) save_plot(x, compute_rmse(df, x) %>% plot_compare_error(attr=x, metric="RMSES"))))
 
 # Runtime graph
