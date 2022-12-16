@@ -16,6 +16,19 @@ get_all_data <- function(sqlconn) {
     mutate(Runtime = ifelse(Runtime < 0, Runtime+86400, Runtime))
 }
 
+get_and_convert_data <- function(sqlqconn) {
+  df <- sqlconn %>% dplyr::collect() %>%
+    mutate(Runtime = ifelse(Runtime < 0, Runtime+86400, Runtime),
+           JPH = map(JPH, convert_blob),
+           LT = map(LT, convert_blob),
+           WIP = map(WIP, convert_blob))
+}
+
+convert_blob <- function(blob) {
+  zlib <- import("zlib")
+  return(list(as.numeric(str_split_1(toString(zlib$decompress(unlist(blob))), pattern = ","))))
+}
+
 add_experiment_parameters <- function(df) {
   data.frame(PT = unlist(map(c(60,60,60,60,600), rep, 11000)),
              Avb = unlist(map(c(85,98,85,98,98), rep, 11000)),
@@ -158,4 +171,4 @@ workspace <- function() {
 ## call required packages
 require(pacman)
 p_load(tidyverse, DBI, RSQLite, plotly, magrittr, broom, GGally, lattice, Hmisc,
-       latex2exp, RColorBrewer, FSA, emmeans)
+       latex2exp, RColorBrewer, FSA, emmeans, reticulate, twosamples)
