@@ -24,12 +24,14 @@ rmse <- function(x, y) {
   sqrt(mean((y-x)^2))
 }
 
+
+
 # Load and transform data
 df <- dplyr::bind_rows(get_data_from_db(db = "data/Detailed.db") %>%
                          mutate(ExpName = "Detailed") %>%
                          add_experiment_parameters(),
-                       get_data_from_db(db = "data/Aggregated.db") %>%
-                         mutate(ExpName = "Aggregated") %>%
+                       get_data_from_db(db = "data/Simplified.db") %>%
+                         mutate(ExpName = "Simplified") %>%
                          add_experiment_parameters())
 
 data_with_errors <- df %>%
@@ -38,7 +40,7 @@ data_with_errors <- df %>%
   pivot_longer(cols = LT_avg:JPH_sd, names_to = "Variable") %>%
   pivot_wider(names_from = ExpName, values_from = value) %>%
   group_by(Experiment, Variable) %>%
-  summarise(Error = Aggregated - Detailed, M = mean(Detailed)) %>%
+  summarise(Error = Simplified - Detailed, M = mean(Detailed)) %>%
   summarise(#MAE = mean(abs(Error)),
             #RMSE = sqrt(mean(Error ^ 2)),
             RMSES = sqrt(mean(Error ^ 2))/mean(M)) %>%
@@ -64,7 +66,7 @@ kable(data_for_table,
       caption = "Scaled RMSE for average values of \\gls{jph}, \\gls{lt}, and \\gls{wip}. Average Runtime values in seconds for detailed and simplified model. Only BufferSize > 0.",
       digits = 3,
       label = "average_results",
-      col.names = c("Setting", "NumberMachines", "JPH", "LT", "WIP", "Detailed", "Aggregated"),
+      col.names = c("Setting", "NumberMachines", "JPH", "LT", "WIP", "Detailed", "Simplified"),
       table.envir = "table*",
       align = "llrrrrr") %>%
   collapse_rows(columns=1, latex_hline = "linespace") %>%
@@ -78,8 +80,8 @@ compute_rmse <- function(df, attr) {
   df %>%
     select(Setting:BufferSize, -all_of(c("ID", "StatTHP", "TargetMDT")), {{attr}}, ExpName) %>%
     pivot_wider(names_from = ExpName, values_from = {{attr}}) %>%
-    nest_by(Setting, Experiment, BufferSize,NumberMachines) %>%
-    mutate(MAE = mean(abs(data$Aggregated - data$Detailed)),
+    nest_by(Setting, Experiment, BufferSize, NumberMachines) %>%
+    mutate(MAE = mean(abs(data$Simplified - data$Detailed)),
            RMSE = rmse(data$Detailed, data$Aggregated),
            RMSES = RMSE/mean(data$Detailed))
 }

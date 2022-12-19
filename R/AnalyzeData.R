@@ -1,3 +1,26 @@
+download_data <- function() {
+  if (is_empty(list.files(path="db"))) {
+    # Download the files to the db folder.
+    if (pacman::p_isloaded("osfr")) {
+      osfr::osf_retrieve_file("https://osf.io/3vfwp") %>%
+        osfr::osf_download(path = "db/", progress = TRUE)
+      osfr::osf_retrieve_file("https://osf.io/9e4mr") %>%
+        osfr::osf_download(path = "db/", progress = TRUE)
+    } else {
+      download.file("https://osf.io/3vfwp/download", "db/results_detailed.db")
+      download.file("https://osf.io/9e4mr/download", "db/results_simplified.db")
+    }
+
+    # Compare checksums
+    if(tools::md5sum("db/results_simplified.db") == "eae63de29f8e32dec77d85f4d9b71fde" &&
+        tools::md5sum("db/results_detailed.db") == "3781380e0177f0771c765798e19f0207") {
+      print("Download succeeded!")
+    } else {
+      print("Download failed.")
+    }
+  }
+}
+
 # Data is in a SQLite 3 db called AggregationExp.db
 get_data_from_db <- function(FUN = get_all_data, db) {
   con <- dbConnect(RSQLite::SQLite(), db)
@@ -170,5 +193,5 @@ workspace <- function() {
 
 ## call required packages
 require(pacman)
-p_load(tidyverse, DBI, RSQLite, plotly, magrittr, broom, GGally, lattice, Hmisc,
-       latex2exp, RColorBrewer, FSA, emmeans, reticulate, twosamples)
+p_load(tidyverse, DBI, RSQLite, plotly, GGally, lattice, Hmisc,
+       latex2exp, RColorBrewer, reticulate, twosamples, osfr)
