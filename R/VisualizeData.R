@@ -155,10 +155,10 @@ compare_singleinputdist_buffersize <- function(attr, df, interactive=FALSE) {
     scale_x_continuous(minor_breaks = seq(50, 450, by = 50)) +
     facet_wrap(vars(Setting), nrow = 5, strip.position = "right", drop = TRUE) +
     labs(#title = paste("BufferSize compared to", attr),
-         x = "Number of buffer/machine pairs in sequence",
-         y = "Error",
-         color = "BufferSize",
-         shape = "Experiment") +
+      x = "Number of buffer/machine pairs in sequence",
+      y = "Error",
+      color = "BufferSize",
+      shape = "Experiment") +
     theme_bw(base_size = 18) +
     theme(legend.position = "bottom")
 }
@@ -218,4 +218,3 @@ matrix_plot <- function(attr, data) {
            title = attr) +
     theme(legend.position = "bottom")
 }
-

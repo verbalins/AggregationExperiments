@@ -1,3 +1,39 @@
+reticulate::source_python("uncompresszlib.py")
+
+import_wip_data <- function() {
+  con <- dbConnect(RSQLite::SQLite(), "db/results_detailed.db")
+  import_wip <- tbl(con, "Results") %>% select(-JPH, -LT) %>% collect()
+  library(multidplyr)
+  cluster <- multidplyr::new_cluster(10)
+  multidplyr::cluster_send(cluster, reticulate::source_python("uncompresszlib.py"))
+  import_wip_c <- import_wip %>%
+    partition(cluster)
+  decompressed <- import_wip_c %>%
+    mutate(dplyr::across(any_of(c("JPH", "WIP", "LT")),
+                         \(x) unlist(purrr::map(x, \(y) round(mean(decompress_zlib(y))))))) %>%
+    collect()
+}
+
+import_data <- function(db) {
+  con <- dbConnect(RSQLite::SQLite(), db)
+  import_wip <- tbl(con, "Results") %>% collect()
+
+  library(multidplyr)
+  cluster <- multidplyr::new_cluster(10)
+  multidplyr::cluster_send(cluster, reticulate::source_python("uncompresszlib.py"))
+
+  import_wip_c <- import_wip %>%
+    partition(cluster)
+
+  decompressed <- import_wip_c %>%
+    mutate(dplyr::across(any_of(c("JPH", "WIP", "LT")),
+                         \(x) unlist(purrr::map(x, \(y) decompress_zlib(y))))) %>%
+    collect()
+
+  rm(cluster, import_wip_c)
+  return(decompressed)
+}
+
 download_data <- function() {
   if (is_empty(list.files(path="db"))) {
     # Download the files to the db folder.
@@ -12,7 +48,7 @@ download_data <- function() {
     }
 
     # Compare checksums
-    if(tools::md5sum("db/results_simplified.db") == "eae63de29f8e32dec77d85f4d9b71fde" &&
+    if(tools::md5sum("db/results_simplified.db") == "c57ff82a37123efaae736782b91d51ca" &&
         tools::md5sum("db/results_detailed.db") == "3781380e0177f0771c765798e19f0207") {
       print("Download succeeded!")
     } else {
@@ -21,17 +57,22 @@ download_data <- function() {
   }
 }
 
-# Data is in a SQLite 3 db called AggregationExp.db
+# Data is in a SQLite 3 db
 get_data_from_db <- function(FUN = get_all_data, db) {
   con <- dbConnect(RSQLite::SQLite(), db)
 
-  results_db <- tbl(con, "Result")
-
-  df <- FUN(results_db)
+  if (stringr::str_starts(db, "db")) {
+    results_db <- tbl(con, "Results")
+    df <- FUN(results_db) %>%
+      get_and_convert_data()
+  } else {
+    results_db <- tbl(con, "Result")
+    df <- FUN(results_db)
+  }
 
   dbDisconnect(con)
 
-  return(df %>% select(-InputDistribution))
+  return(df)
 }
 
 get_all_data <- function(sqlconn) {
@@ -39,17 +80,22 @@ get_all_data <- function(sqlconn) {
     mutate(Runtime = ifelse(Runtime < 0, Runtime+86400, Runtime))
 }
 
-get_and_convert_data <- function(sqlqconn) {
-  df <- sqlconn %>% dplyr::collect() %>%
-    mutate(Runtime = ifelse(Runtime < 0, Runtime+86400, Runtime),
-           JPH = map(JPH, convert_blob),
-           LT = map(LT, convert_blob),
-           WIP = map(WIP, convert_blob))
+convert_data <- function(data) {
+  zlib <- reticulate::import("zlib")
+  data %>%
+    dplyr::mutate(Runtime = ifelse(Runtime < 0, Runtime+86400, Runtime),
+           #dplyr::across(any_of(c("JPH", "WIP", "LT")), purrr::map, convert_blob))
+           dplyr::across(any_of(c("JPH", "WIP", "LT")), purrr::map, \(x) as.numeric(stringr::str_split_1(toString(zlib$decompress(unlist(x))), pattern = ","))))
 }
+
+
+
+
 
 convert_blob <- function(blob) {
   zlib <- import("zlib")
-  return(list(as.numeric(str_split_1(toString(zlib$decompress(unlist(blob))), pattern = ","))))
+  #return(list(as.numeric(str_split_1(toString(zlib$decompress(unlist(blob))), pattern = ","))))
+  return(as.numeric(stringr::str_split_1(toString(zlib$decompress(unlist(blob))), pattern = ",")))
 }
 
 add_experiment_parameters <- function(df) {
@@ -166,29 +212,6 @@ delta_values <- function(grouped) {
   levels(grouped$ExpName) <- c("Detailed", "Aggregated")
   #levels(grouped$InputDistribution) <- c("No Failure", "Avb", "sqrt(Avb)")
   return(grouped)
-}
-
-workspace <- function() {
-  x <- grouped_85 %>% filter(ExpName == "Detailed", InputDistribution == "No Failure") %>% .$JPH_avg
-  y <- grouped_85 %>% filter(ExpName == "Aggregated", InputDistribution == "No Failure") %>% .$JPH_avg
-  fv <- data.frame(x,y) %>% lm(y ~ x,.) %>% fitted.values()
-
-  data.frame(x, y,
-             BufferSize = rep(rep(0:10, each = 1), 100),
-             NumberMachines = unique(test$NumberMachines),
-             Experiment = unique(test$Experiment)) %>%
-  plot_ly(
-    x = ~x,
-    y = ~y,
-    color = ~BufferSize,
-    customdata = ~Experiment,
-    mode = "markers",
-    type = "scatter",
-    hovertemplate = paste('Detailed: %{x:.2f}',
-                          '<br>Aggregated: %{y:.2f}',
-                          '<br>BufferSize: %{BufferSize}',
-                          '<br>Experiment: %{customdata}')) %>%
-  add_lines(x = ~x, y = ~fv$residuals)
 }
 
 ## call required packages
