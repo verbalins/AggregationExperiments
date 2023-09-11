@@ -21,9 +21,12 @@ save_plot <- function(x, p) {
 }
 
 rmse <- function(x, y) {
-  sqrt(mean((y-x)^2))
+  sqrt(sum((y-x)^2)/length(x))
 }
 
+rmses <- function(x, y) {
+  rmse(x, y) / mean(y)
+}
 
 
 # Load and transform data
@@ -39,11 +42,9 @@ data_with_errors <- df %>%
   select(Setting:ExpName,-all_of(c("ID", "StatTHP", "TargetMDT", "Runtime"))) %>%
   pivot_longer(cols = LT_avg:JPH_sd, names_to = "Variable") %>%
   pivot_wider(names_from = ExpName, values_from = value) %>%
-  group_by(Experiment, Variable) %>%
-  summarise(Error = Simplified - Detailed, M = mean(Detailed)) %>%
-  summarise(#MAE = mean(abs(Error)),
-            #RMSE = sqrt(mean(Error ^ 2)),
-            RMSES = sqrt(mean(Error ^ 2))/mean(M)) %>%
+  nest_by(Experiment, Variable) %>%
+  #summarise(RMSES = sqrt(sum((data$Detailed - data$Simplified) ^ 2)/length(data$Detailed))/mean(data$Detailed)) %>%
+  summarise(RMSES = rmses(data$Simplified, data$Detailed)) %>%
   pivot_wider(names_from = Variable, values_from = RMSES)
 
 data_for_table <- data_with_errors %>%
@@ -63,14 +64,15 @@ data_for_table <- data_with_errors %>%
 kable(data_for_table,
       format = "latex",
       booktabs = TRUE,
-      caption = "Scaled RMSE for average values of \\gls{jph}, \\gls{lt}, and \\gls{wip}. Average Runtime values in seconds for detailed and simplified model. Only BufferSize > 0.",
+      caption = "Scaled RMSE for average values of \\gls{jph}, \\gls{lt}, and \\gls{wip}, binned by $\\beta$. Average Runtime values in seconds for detailed and simplified model. The results are only for $\\gamma > 0$",
       digits = 3,
       label = "average_results",
-      col.names = c("Setting", "NumberMachines", "JPH", "LT", "WIP", "Detailed", "Simplified"),
+      col.names = c("$\\alpha$", "$\\beta$", "JPH", "LT", "WIP", "Detailed", "Simplified"),
       table.envir = "table*",
       align = "llrrrrr") %>%
   collapse_rows(columns=1, latex_hline = "linespace") %>%
-  add_header_above(c(" " = 2, "Average Scaled RMSE" = 3, "Average Runtime (s)" = 2))
+  add_header_above(c(" " = 2, "Average Scaled RMSE" = 3, "Average Runtime (s)" = 2)) %>%
+  save_kable(file = "img/experimenttable.tex")
 
 grouped <- df %>%
   group_data() %>%
@@ -81,13 +83,18 @@ compute_rmse <- function(df, attr) {
     select(Setting:BufferSize, -all_of(c("ID", "StatTHP", "TargetMDT")), {{attr}}, ExpName) %>%
     pivot_wider(names_from = ExpName, values_from = {{attr}}) %>%
     nest_by(Setting, Experiment, BufferSize, NumberMachines) %>%
-    mutate(MAE = mean(abs(data$Simplified - data$Detailed)),
-           RMSE = rmse(data$Detailed, data$Aggregated),
-           RMSES = RMSE/mean(data$Detailed))
+    mutate(MAE = mean(abs(data$Detailed - data$Simplified)),
+           RMSE = rmse(data$Detailed, data$Simplified),
+           RMSES = rmses(data$Detailed, data$Simplified))
 }
 
-invisible(lapply(df %>% select(LT_avg:JPH_sd) %>% colnames(),
-                 function(x) save_plot(x, compute_rmse(df, x) %>% plot_compare_error(attr=x, metric="RMSES"))))
+invisible(lapply(df %>% filter(NumberMachines <= 200, BufferSize != 0) %>% select(LT_avg:JPH_sd) %>% colnames(),
+                 function(x) save_plot(x, compute_rmse(df %>% filter(NumberMachines <= 200, BufferSize != 0), x) %>%
+                                         plot_compare_error(attr=x, metric="RMSES"))))
+
+invisible(lapply(df %>% filter(BufferSize != 0) %>% select(LT_avg:JPH_sd) %>% colnames(),
+                 function(x) save_plot(paste0(x, "_500"), compute_rmse(df %>% filter(BufferSize != 0), x) %>%
+                                         plot_compare_error(attr=x, metric="RMSES"))))
 
 # Runtime graph
 p <- grouped %>%

@@ -36,6 +36,7 @@ import_data <- function(db) {
 
 download_data <- function() {
   if (is_empty(list.files(path="db"))) {
+
     # Download the files to the db folder.
     if (pacman::p_isloaded("osfr")) {
       osfr::osf_retrieve_file("https://osf.io/3vfwp") %>%
@@ -217,4 +218,4 @@ delta_values <- function(grouped) {
 ## call required packages
 require(pacman)
 p_load(tidyverse, DBI, RSQLite, plotly, GGally, lattice, Hmisc,
-       latex2exp, RColorBrewer, reticulate, twosamples, osfr)
+       latex2exp, RColorBrewer, reticulate, twosamples, osfr, multidplyr)
