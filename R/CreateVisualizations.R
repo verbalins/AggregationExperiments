@@ -88,11 +88,11 @@ compute_rmse <- function(df, attr) {
            RMSES = rmses(data$Detailed, data$Simplified))
 }
 
-invisible(lapply(df %>% filter(NumberMachines <= 200, BufferSize != 0) %>% select(LT_avg:JPH_sd) %>% colnames(),
+invisible(lapply(df %>% filter(NumberMachines <= 200, BufferSize != 0) %>% select(all_of(LT_avg:JPH_sd)) %>% colnames(),
                  function(x) save_plot(x, compute_rmse(df %>% filter(NumberMachines <= 200, BufferSize != 0), x) %>%
                                          plot_compare_error(attr=x, metric="RMSES"))))
 
-invisible(lapply(df %>% filter(BufferSize != 0) %>% select(LT_avg:JPH_sd) %>% colnames(),
+invisible(lapply(df %>% filter(BufferSize != 0) %>% select(all_of(LT_avg:JPH_sd)) %>% colnames(),
                  function(x) save_plot(paste0(x, "_500"), compute_rmse(df %>% filter(BufferSize != 0), x) %>%
                                          plot_compare_error(attr=x, metric="RMSES"))))
 
@@ -104,11 +104,15 @@ p <- grouped %>%
                                      "\u03b1\u2082",
                                      "\u03b1\u2083",
                                      "\u03b1\u2084",
-                                     "\u03b1\u2085"))) %>% # Alpha_n
+                                     "\u03b1\u2085")),
+         ExpName = str_replace(ExpName, "Aggregated", "Simplified"),
+         ExpName = factor(ExpName,
+                          levels = c("Simplified", "Detailed"))) %>% # Alpha_n
   ggplot(aes(NumberMachines, Runtime, group = interaction(ExpName, BufferSize), color = ExpName)) +
   geom_line(alpha=0.4) +
   geom_smooth(aes(group=ExpName), se = FALSE) +
   scale_y_continuous(breaks = seq(0, 200, by = 50), limits = c(0, 250)) +
+  scale_color_discrete(breaks = c('Detailed', 'Simplified')) +
   facet_wrap(~Setting, nrow = 5, strip.position = "right", drop = TRUE) +
   ylab("Runtime in seconds") +
   xlab(paste("Number of buffer/machine pairs in sequence,", "\u03b2")) +
