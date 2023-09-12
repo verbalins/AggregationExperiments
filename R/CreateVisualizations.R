@@ -20,12 +20,12 @@ save_plot <- function(x, p) {
   )
 }
 
-rmse <- function(x, y) {
-  sqrt(sum((y-x)^2)/length(x))
+rmse <- function(obs, pred) {
+  sqrt(sum((obs - pred)^2)/length(obs))
 }
 
-rmses <- function(x, y) {
-  rmse(x, y) / mean(y)
+rmses <- function(obs, pred) {
+  rmse(obs, pred) / mean(obs)
 }
 
 
@@ -44,7 +44,7 @@ data_with_errors <- df %>%
   pivot_wider(names_from = ExpName, values_from = value) %>%
   nest_by(Experiment, Variable) %>%
   #summarise(RMSES = sqrt(sum((data$Detailed - data$Simplified) ^ 2)/length(data$Detailed))/mean(data$Detailed)) %>%
-  summarise(RMSES = rmses(data$Simplified, data$Detailed)) %>%
+  summarise(RMSES = rmses(data$Detailed, data$Simplified)) %>%
   pivot_wider(names_from = Variable, values_from = RMSES)
 
 data_for_table <- data_with_errors %>%
@@ -80,7 +80,7 @@ grouped <- df %>%
 
 compute_rmse <- function(df, attr) {
   df %>%
-    select(Setting:BufferSize, -all_of(c("ID", "StatTHP", "TargetMDT")), {{attr}}, ExpName) %>%
+    select(Setting:BufferSize, -all_of(c("ID", "StatTHP", "TargetMDT")), all_of({{attr}}), ExpName) %>%
     pivot_wider(names_from = ExpName, values_from = {{attr}}) %>%
     nest_by(Setting, Experiment, BufferSize, NumberMachines) %>%
     mutate(MAE = mean(abs(data$Detailed - data$Simplified)),
@@ -88,13 +88,23 @@ compute_rmse <- function(df, attr) {
            RMSES = rmses(data$Detailed, data$Simplified))
 }
 
-invisible(lapply(df %>% filter(NumberMachines <= 200, BufferSize != 0) %>% select(all_of(LT_avg:JPH_sd)) %>% colnames(),
-                 function(x) save_plot(x, compute_rmse(df %>% filter(NumberMachines <= 200, BufferSize != 0), x) %>%
-                                         plot_compare_error(attr=x, metric="RMSES"))))
+save_plots <- function(data, filename="", metric = "RMSES") {
+  invisible(lapply(data |> select(LT_avg:JPH_sd) |> colnames(),
+                 function(x) save_plot(paste0(x, filename), compute_rmse(data, x) |>
+                                         plot_compare_error(attr=x, metric))))
+}
 
-invisible(lapply(df %>% filter(BufferSize != 0) %>% select(all_of(LT_avg:JPH_sd)) %>% colnames(),
-                 function(x) save_plot(paste0(x, "_500"), compute_rmse(df %>% filter(BufferSize != 0), x) %>%
-                                         plot_compare_error(attr=x, metric="RMSES"))))
+df |> save_plots(filename="_500") # Default 500 beta and all gamma
+
+df |> # Only 200 beta
+  filter(NumberMachines <= 200) |>
+  save_plots(filename="_200")
+
+df |> # 200 beta and gamma > 0
+  filter(NumberMachines <= 200,
+         BufferSize != 0) |>
+  save_plots(filename="_200_0gamma")
+
 
 # Runtime graph
 p <- grouped %>%
