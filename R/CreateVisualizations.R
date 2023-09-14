@@ -24,7 +24,7 @@ rmse <- function(obs, pred) {
   sqrt(sum((obs - pred)^2)/length(obs))
 }
 
-rmses <- function(obs, pred) {
+nrmse <- function(obs, pred) {
   rmse(obs, pred) / mean(obs)
 }
 
@@ -39,13 +39,12 @@ df <- dplyr::bind_rows(get_data_from_db(db = "data/Detailed.db") %>%
 
 data_with_errors <- df %>%
   filter(BufferSize > 0) %>%
-  select(Setting:ExpName,-all_of(c("ID", "StatTHP", "TargetMDT", "Runtime"))) %>%
+  select(PT:ExpName,-all_of(c("ID", "StatTHP", "TargetMDT", "Runtime"))) %>%
   pivot_longer(cols = LT_avg:JPH_sd, names_to = "Variable") %>%
   pivot_wider(names_from = ExpName, values_from = value) %>%
   nest_by(Experiment, Variable) %>%
-  #summarise(RMSES = sqrt(sum((data$Detailed - data$Simplified) ^ 2)/length(data$Detailed))/mean(data$Detailed)) %>%
-  summarise(RMSES = rmses(data$Detailed, data$Simplified)) %>%
-  pivot_wider(names_from = Variable, values_from = RMSES)
+  summarise(NRMSE = nrmse(data$Detailed, data$Simplified)) %>%
+  pivot_wider(names_from = Variable, values_from = NRMSE)
 
 data_for_table <- data_with_errors %>%
   ungroup() %>%
@@ -59,19 +58,24 @@ data_for_table <- data_with_errors %>%
            NumberMachines = cut(NumberMachines,
                breaks = c(5,25,50,100,200,350,500), include.lowest=TRUE, labels=c("5-25", "25-50", "50-100", "100-250", "250-350", "350-500"))) %>%
   summarise(across(contains(c("_", "Runtime")), mean)) %>%
-  select(Setting, NumberMachines, contains(c("_avg","Runtime")))
+  select(Setting, NumberMachines, contains(c("_avg","Runtime"))) %>%
+  ungroup() %>%
+  left_join(y = df %>%
+              select(PT:Setting) %>%
+              distinct()) %>%
+  relocate(PT:MDT, .after = Setting)
 
 kable(data_for_table,
       format = "latex",
       booktabs = TRUE,
-      caption = "Scaled RMSE for average values of \\gls{jph}, \\gls{lt}, and \\gls{wip}, binned by $\\beta$. Average Runtime values in seconds for detailed and simplified model. The results are only for $\\gamma > 0$",
+      caption = "\\gls{nrmse} for average values of \\gls{jph}, \\gls{lt}, and \\gls{wip}, binned by $\\beta$. Average Runtime values in seconds for \\textit{Detailed} and \\textit{Simplified}. The results are only for $\\gamma > 0$",
       digits = 3,
       label = "average_results",
-      col.names = c("$\\alpha$", "$\\beta$", "JPH", "LT", "WIP", "Detailed", "Simplified"),
+      col.names = c("$\\alpha$", "PT", "Avb", "MDT", "$\\beta$", "JPH", "LT", "WIP", "Detailed", "Simplified"),
       table.envir = "table*",
-      align = "llrrrrr") %>%
-  collapse_rows(columns=1, latex_hline = "linespace") %>%
-  add_header_above(c(" " = 2, "Average Scaled RMSE" = 3, "Average Runtime (s)" = 2)) %>%
+      align = "lllllrrrrr") %>%
+  collapse_rows(columns=c(1,2,3,4), latex_hline = "linespace", target=1) %>%
+  add_header_above(c("$\\alpha$" = 4, " " = 1, "NRMSE (\\SI{}{\\percent})" = 3, "Average Runtime (s)" = 2)) %>%
   save_kable(file = "img/experimenttable.tex")
 
 grouped <- df %>%
@@ -85,10 +89,10 @@ compute_rmse <- function(df, attr) {
     nest_by(Setting, Experiment, BufferSize, NumberMachines) %>%
     mutate(MAE = mean(abs(data$Detailed - data$Simplified)),
            RMSE = rmse(data$Detailed, data$Simplified),
-           RMSES = rmses(data$Detailed, data$Simplified))
+           NRMSE = nrmse(data$Detailed, data$Simplified))
 }
 
-save_plots <- function(data, filename="", metric = "RMSES") {
+save_plots <- function(data, filename="", metric = "NRMSE") {
   invisible(lapply(data |> select(LT_avg:JPH_sd) |> colnames(),
                  function(x) save_plot(paste0(x, filename), compute_rmse(data, x) |>
                                          plot_compare_error(attr=x, metric))))

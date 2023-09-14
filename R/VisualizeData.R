@@ -180,7 +180,7 @@ plot_compare_error <- function(df, attr, metric = "Error", interactive = FALSE) 
     scale_y_continuous(labels = scales::percent_format(accuracy = 1)) + # Use percentage
     facet_wrap(vars(Setting), nrow = 5, strip.position = "right", drop = TRUE) +
     labs(x = "Number of buffer/machine pairs in sequence, \u03b2", # Beta
-         y = paste(if_else(metric=="RMSES", "Scaled RMSE", metric), unlist(strsplit(attr, "[_]"))[1]),
+         y = paste(if_else(metric=="NRMSE", "Normalized RMSE", metric), unlist(strsplit(attr, "[_]"))[1]),
          color = "\u03b3", # Gamma
          shape = "Experiment") +
     theme_bw(base_size = 14) +
