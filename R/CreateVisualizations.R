@@ -1,22 +1,19 @@
 source("R/VisualizeData.R")
-library(ragg)
 library(xtable)
 library(kableExtra)
 library(Hmisc)
+library(patchwork)
+library(flextable)
 
 # Export plots
 save_plot <- function(x, p) {
   ggsave(
     filename = paste0("img/", x, ".pdf"),
     plot = p,
-    # bg = "transparent",
-    device = grDevices::cairo_pdf,
-    #res = 300,
+    device = cairo_pdf,
     units = "px",
-    #limitsize = FALSE,
     height = 2500,
     width = 2000,
-    # background = "transparent"
   )
 }
 
@@ -56,7 +53,7 @@ data_for_table <- data_with_errors %>%
                summarise(across(where(is.double), mean))) %>%
   group_by(Setting,
            NumberMachines = cut(NumberMachines,
-               breaks = c(5,25,50,100,200,350,500), include.lowest=TRUE, labels=c("5-25", "25-50", "50-100", "100-250", "250-350", "350-500"))) %>%
+                                breaks = c(5,25,50,100,200,350,500), include.lowest=TRUE, labels=c("5-25", "25-50", "50-100", "100-250", "250-350", "350-500"))) %>%
   summarise(across(contains(c("_", "Runtime")), mean)) %>%
   select(Setting, NumberMachines, contains(c("_avg","Runtime"))) %>%
   ungroup() %>%
@@ -92,33 +89,49 @@ compute_rmse <- function(df, attr) {
            NRMSE = nrmse(data$Detailed, data$Simplified))
 }
 
-save_plots <- function(data, filename="", metric = "NRMSE") {
+save_plots <- function(data, g, filename="", metric = "NRMSE") {
   invisible(lapply(data |> select(LT_avg:JPH_sd) |> colnames(),
-                 function(x) save_plot(paste0(x, filename), compute_rmse(data, x) |>
-                                         plot_compare_error(attr=x, metric))))
+                   function(x) save_plot(paste0(x, filename), compute_rmse(data, x) |>
+                                           plot_compare_error_combined(attr=x, metric=metric, g = g))))
 }
 
-df |> save_plots(filename="_500") # Default 500 beta and all gamma
+ex_table <- df %>%
+  select(PT:MDT) %>%
+  distinct() %>%
+  t()
+
+colnames(ex_table) <-
+  c("\U03b1\U2081",
+    "\U03b1\U2082",
+    "\U03b1\U2083",
+    "\U03b1\U2084",
+    "\U03b1\U2085")
+
+ex_table <- flextable(ex_table %>% as_tibble(rownames = " ")) %>% autofit() %>% gen_grob()
+
+df |> save_plots(g = ex_table,
+                 filename="_500") # Default 500 beta and all gamma
 
 df |> # Only 200 beta
   filter(NumberMachines <= 200) |>
-  save_plots(filename="_200")
+  save_plots(g = ex_table,
+             filename="_200")
 
 df |> # 200 beta and gamma > 0
   filter(NumberMachines <= 200,
          BufferSize != 0) |>
-  save_plots(filename="_200_0gamma")
-
+  save_plots(g = ex_table,
+             filename="_200_0gamma")
 
 # Runtime graph
 p <- grouped %>%
   mutate(Setting = factor(Setting,
                           levels = c("1","2","3","4","5"),
-                          labels = c("\u03b1\u2081",
-                                     "\u03b1\u2082",
-                                     "\u03b1\u2083",
-                                     "\u03b1\u2084",
-                                     "\u03b1\u2085")),
+                          labels = c("\U03b1\U2081",
+                                     "\U03b1\U2082",
+                                     "\U03b1\U2083",
+                                     "\U03b1\U2084",
+                                     "\U03b1\U2085")),
          ExpName = str_replace(ExpName, "Aggregated", "Simplified"),
          ExpName = factor(ExpName,
                           levels = c("Simplified", "Detailed"))) %>% # Alpha_n

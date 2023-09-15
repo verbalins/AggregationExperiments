@@ -1,5 +1,4 @@
 source("R/AnalyzeData.R")
-library(latex2exp)
 
 # How to compare, we have several different KPIs. Facet on input distribution.
 # Create a visualisation for each metric with min, avg, and max.
@@ -163,15 +162,22 @@ compare_singleinputdist_buffersize <- function(attr, df, interactive=FALSE) {
     theme(legend.position = "bottom")
 }
 
+get_legend <- function(myggplot) {
+  tmp <- ggplot_gtable(ggplot_build(myggplot))
+  leg <- which(sapply(tmp$grobs, function(x) x$name) == "guide-box")
+  legend <- tmp$grobs[[leg]]
+  return(legend)
+}
+
 plot_compare_error <- function(df, attr, metric = "Error", interactive = FALSE) {
   df %>% mutate(BufferSize = as.factor(BufferSize),
                 Setting = factor(Setting,
                                  levels = c("1","2","3","4","5"),
-                                 labels = c("\u03b1\u2081",
-                                            "\u03b1\u2082",
-                                            "\u03b1\u2083",
-                                            "\u03b1\u2084",
-                                            "\u03b1\u2085"))) %>% # Alpha_n
+                                 labels = c("\U03b1\U2081",
+                                            "\U03b1\U2082",
+                                            "\U03b1\U2083",
+                                            "\U03b1\U2084",
+                                            "\U03b1\U2085"))) %>% # Alpha_n
     ggplot(aes(NumberMachines, y = !!as.name(metric), group = interaction(Setting, BufferSize))) +
     #geom_point(alpha = 0.5, size = 1) + #, aes(shape = ExpName)) +
     geom_hline(yintercept = if_else(metric == "Ratio", 1, 0)) +
@@ -184,7 +190,16 @@ plot_compare_error <- function(df, attr, metric = "Error", interactive = FALSE) 
          color = "\u03b3", # Gamma
          shape = "Experiment") +
     theme_bw(base_size = 14) +
-    theme(legend.position = "bottom")
+    theme(legend.position = "bottom",
+          legend.justification = "left")
+}
+
+plot_compare_error_combined <- function(df, attr, g, metric = "Error") {
+  p <- plot_compare_error(df, attr, metric)
+
+  p_legend <- get_legend(p)
+  p_no_legend <- p + theme(legend.position = "none")
+  p_no_legend / (wrap_elements(p_legend) | wrap_elements(g)) + plot_layout(heights = c(6,1))
 }
 
 plot_compare_error_ggpubr <- function(df, attr, metric = "Error") {
