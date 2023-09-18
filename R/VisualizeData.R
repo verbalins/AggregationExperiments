@@ -186,17 +186,16 @@ plot_compare_error <- function(df, attr, metric = "Error", interactive = FALSE) 
     scale_y_continuous(labels = scales::percent_format(accuracy = 1)) + # Use percentage
     facet_wrap(vars(Setting), nrow = 5, strip.position = "right", drop = TRUE) +
     labs(x = "Number of buffer/machine pairs in sequence, \u03b2", # Beta
-         y = paste(if_else(metric=="NRMSE", "Normalized RMSE", metric), unlist(strsplit(attr, "[_]"))[1]),
+         y = paste(if_else(metric=="NRMSE", "Normalized RMSE for average", metric), unlist(strsplit(attr, "[_]"))[1]),
          color = "\u03b3", # Gamma
          shape = "Experiment") +
+    guides(color = guide_legend(nrow = 3, byrow = TRUE)) +
     theme_bw(base_size = 14) +
     theme(legend.position = "bottom",
           legend.justification = "left")
 }
 
-plot_compare_error_combined <- function(df, attr, g, metric = "Error") {
-  p <- plot_compare_error(df, attr, metric)
-
+plot_combine_with_table <- function(p, g) {
   p_legend <- get_legend(p)
   p_no_legend <- p + theme(legend.position = "none")
   p_no_legend / (wrap_elements(p_legend) | wrap_elements(g)) + plot_layout(heights = c(6,1))

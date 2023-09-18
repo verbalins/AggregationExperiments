@@ -1,14 +1,14 @@
 source("R/VisualizeData.R")
-library(xtable)
 library(kableExtra)
 library(Hmisc)
 library(patchwork)
 library(flextable)
+library(parallel)
 
 # Export plots
 save_plot <- function(x, p) {
   ggsave(
-    filename = paste0("img/", x, ".pdf"),
+    filename = paste0("img/", if_else(str_detect(x, "avg|Runtime"), x, paste0("other/", x)), ".pdf"),
     plot = p,
     device = cairo_pdf,
     units = "px",
@@ -89,10 +89,11 @@ compute_rmse <- function(df, attr) {
            NRMSE = nrmse(data$Detailed, data$Simplified))
 }
 
-save_plots <- function(data, g, filename="", metric = "NRMSE") {
-  invisible(lapply(data |> select(LT_avg:JPH_sd) |> colnames(),
+compute_error_and_save <- function(data, g, filename="", metric = "NRMSE") {
+  invisible(mclapply(data |> select(LT_avg:JPH_sd) |> colnames(),
                    function(x) save_plot(paste0(x, filename), compute_rmse(data, x) |>
-                                           plot_compare_error_combined(attr=x, metric=metric, g = g))))
+                                           plot_compare_error(attr=x, metric=metric) |>
+                                           plot_combine_with_table(g = g)), mc.cores=12))
 }
 
 ex_table <- df %>%
@@ -100,38 +101,44 @@ ex_table <- df %>%
   distinct() %>%
   t()
 
-colnames(ex_table) <-
+alpha_unicode <-
   c("\U03b1\U2081",
     "\U03b1\U2082",
     "\U03b1\U2083",
     "\U03b1\U2084",
     "\U03b1\U2085")
 
-ex_table <- flextable(ex_table %>% as_tibble(rownames = " ")) %>% autofit() %>% gen_grob()
+colnames(ex_table) <- alpha_unicode
 
-df |> save_plots(g = ex_table,
+ex_table_grob <-
+  flextable(data = ex_table |>
+              as_tibble(rownames = " ") |>
+              mutate(' ' = c("PT (s)", "Avb (%)", "MDT (s)"))) |>
+  align(align = "center", part = "all") |>
+  align(j = 1, align = "left", part = "all") |>
+  hline_top(part="all", border = officer::fp_border(width = 3)) |>
+  hline_bottom(part = "body", border = officer::fp_border(width = 3)) |>
+  gen_grob(scaling = "full")
+
+df |> compute_error_and_save(g = ex_table_grob,
                  filename="_500") # Default 500 beta and all gamma
 
 df |> # Only 200 beta
   filter(NumberMachines <= 200) |>
-  save_plots(g = ex_table,
+  compute_error_and_save(g = ex_table_grob,
              filename="_200")
 
 df |> # 200 beta and gamma > 0
   filter(NumberMachines <= 200,
          BufferSize != 0) |>
-  save_plots(g = ex_table,
+  compute_error_and_save(g = ex_table_grob,
              filename="_200_0gamma")
 
 # Runtime graph
 p <- grouped %>%
   mutate(Setting = factor(Setting,
                           levels = c("1","2","3","4","5"),
-                          labels = c("\U03b1\U2081",
-                                     "\U03b1\U2082",
-                                     "\U03b1\U2083",
-                                     "\U03b1\U2084",
-                                     "\U03b1\U2085")),
+                          labels = alpha_unicode),
          ExpName = str_replace(ExpName, "Aggregated", "Simplified"),
          ExpName = factor(ExpName,
                           levels = c("Simplified", "Detailed"))) %>% # Alpha_n
@@ -143,8 +150,10 @@ p <- grouped %>%
   facet_wrap(~Setting, nrow = 5, strip.position = "right", drop = TRUE) +
   ylab("Runtime in seconds") +
   xlab(paste("Number of buffer/machine pairs in sequence,", "\u03b2")) +
-  guides(color=guide_legend(title="Model type")) +
+  guides(color=guide_legend(ncol = 1, title="Model type")) +
   theme_bw(base_size = 14) +
-  theme(legend.position = "bottom")
+  theme(legend.position = "bottom",
+        legend.justification = "left")
 
-save_plot("Runtime", p)
+plot_combine_with_table(p, g = ex_table_grob) |>
+  save_plot(x="Runtime")
