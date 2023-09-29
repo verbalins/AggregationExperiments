@@ -1,2 +1,2 @@
-# AggregationExperiments
-Experiments made to test the extents of the aggregation technique
+# Model Simplification Experiments
+Experiments made to test the extents of the model simplification method
