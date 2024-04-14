@@ -35,22 +35,18 @@ import_data <- function(db) {
 }
 
 download_data <- function() {
-  if (is_empty(list.files(path="db"))) {
+  if (!file.exists("db/simplification_results.db")) {
 
     # Download the files to the db folder.
     if (pacman::p_isloaded("osfr")) {
-      osfr::osf_retrieve_file("https://osf.io/3vfwp") %>%
-        osfr::osf_download(path = "db/", progress = TRUE)
-      osfr::osf_retrieve_file("https://osf.io/9e4mr") %>%
+      osfr::osf_retrieve_file("https://osf.io/uwymh") %>%
         osfr::osf_download(path = "db/", progress = TRUE)
     } else {
-      download.file("https://osf.io/3vfwp/download", "db/results_detailed.db")
-      download.file("https://osf.io/9e4mr/download", "db/results_simplified.db")
+      download.file("https://osf.io/uwymh/download", "db/simplification_results.db")
     }
 
     # Compare checksums
-    if(tools::md5sum("db/results_simplified.db") == "c57ff82a37123efaae736782b91d51ca" &&
-        tools::md5sum("db/results_detailed.db") == "3781380e0177f0771c765798e19f0207") {
+    if(tools::md5sum("db/simplification_results.db") == "f4e169e3ffdd099dbf1a9b422b7f8bf0") {
       print("Download succeeded!")
     } else {
       print("Download failed.")
@@ -85,13 +81,9 @@ convert_data <- function(data) {
   zlib <- reticulate::import("zlib")
   data %>%
     dplyr::mutate(Runtime = ifelse(Runtime < 0, Runtime+86400, Runtime),
-           #dplyr::across(any_of(c("JPH", "WIP", "LT")), purrr::map, convert_blob))
-           dplyr::across(any_of(c("JPH", "WIP", "LT")), purrr::map, \(x) as.numeric(stringr::str_split_1(toString(zlib$decompress(unlist(x))), pattern = ","))))
+                  #dplyr::across(any_of(c("JPH", "WIP", "LT")), purrr::map, convert_blob))
+                  dplyr::across(any_of(c("JPH", "WIP", "LT")), purrr::map, \(x) as.numeric(stringr::str_split_1(toString(zlib$decompress(unlist(x))), pattern = ","))))
 }
-
-
-
-
 
 convert_blob <- function(blob) {
   zlib <- import("zlib")
@@ -137,8 +129,16 @@ get_missing_experiments <- function(sqlconn) {
 check_missing <- function(db = "data/NewSimulationResults_98_Errors.db") {
   get_data_from_db(get_missing_experiments, db) %>%
     count(Experiment) #%>%
-    #filter(n < 3) %>%
-    #nrow() == 0
+  #filter(n < 3) %>%
+  #nrow() == 0
+}
+
+rmse <- function(obs, pred) {
+  sqrt(sum((obs - pred)^2)/length(obs))
+}
+
+nrmse <- function(obs, pred) {
+  rmse(obs, pred) / mean(obs)
 }
 
 run_script <- function() {
@@ -218,4 +218,4 @@ delta_values <- function(grouped) {
 ## call required packages
 require(pacman)
 p_load(tidyverse, DBI, RSQLite, plotly, GGally, lattice, Hmisc,
-       latex2exp, RColorBrewer, reticulate, twosamples, osfr, multidplyr)
+       latex2exp, RColorBrewer, reticulate, twosamples, osfr, multidplyr, stringi)

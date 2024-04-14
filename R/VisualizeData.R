@@ -1,5 +1,17 @@
 source("R/AnalyzeData.R")
 
+# Export plots
+save_plot <- function(x, p) {
+  ggsave(
+    filename = paste0("img/", x, ".pdf"),
+    plot = p,
+    device = grDevices::cairo_pdf,
+    units = "px",
+    height = 2500,
+    width = 2000
+  )
+}
+
 # How to compare, we have several different KPIs. Facet on input distribution.
 # Create a visualisation for each metric with min, avg, and max.
 temp <- function(df) {
@@ -170,19 +182,21 @@ get_legend <- function(myggplot) {
 }
 
 plot_compare_error <- function(df, attr, metric = "Error", interactive = FALSE) {
+  alpha_unicode <-
+    stri_unescape_unicode(paste0("\\u", "03b1", "\\u", "208",
+                                 seq_along(unique(as.character(df$Setting))), sep=''))
+
   df %>% mutate(BufferSize = as.factor(BufferSize),
                 Setting = factor(Setting,
-                                 levels = c("1","2","3","4","5"),
-                                 labels = c("\U03b1\U2081",
-                                            "\U03b1\U2082",
-                                            "\U03b1\U2083",
-                                            "\U03b1\U2084",
-                                            "\U03b1\U2085"))) %>% # Alpha_n
+                                 levels = as.character(unique(df$Setting)),
+                                 labels = alpha_unicode)) %>% # Alpha_n
     ggplot(aes(NumberMachines, y = !!as.name(metric), group = interaction(Setting, BufferSize))) +
     #geom_point(alpha = 0.5, size = 1) + #, aes(shape = ExpName)) +
     geom_hline(yintercept = if_else(metric == "Ratio", 1, 0)) +
     geom_line(aes(color = BufferSize, group = interaction(Setting, BufferSize))) +
-    scale_x_continuous(minor_breaks = seq(50, 450, by = 50)) +
+    scale_x_continuous(breaks = seq(0, 500, by = 50),
+                       minor_breaks = seq(25, 500, by = 25),
+                       limits = c(1, NA)) +
     scale_y_continuous(labels = scales::percent_format(accuracy = 1)) + # Use percentage
     facet_wrap(vars(Setting), nrow = 5, strip.position = "right", drop = TRUE) +
     labs(x = "Number of buffer/machine pairs in sequence, \u03b2", # Beta
@@ -192,12 +206,15 @@ plot_compare_error <- function(df, attr, metric = "Error", interactive = FALSE) 
     guides(color = guide_legend(nrow = 3, byrow = TRUE)) +
     theme_bw(base_size = 14) +
     theme(legend.position = "bottom",
-          legend.justification = "left")
+          legend.justification = "left",
+          text = element_text(family = "Segoe"))
 }
 
-plot_combine_with_table <- function(p, g) {
+plot_compare_error_combined <- function(df, attr, g, metric = "Error") {
+  p <- plot_compare_error(df, attr, metric)
+
   p_legend <- get_legend(p)
-  p_no_legend <- p + theme(legend.position = "none")
+  p_no_legend <- p + theme(legend.position = "none", text = element_text(family = "Segoe"))
   p_no_legend / (wrap_elements(p_legend) | wrap_elements(g)) + plot_layout(heights = c(6,1))
 }
 
